@@ -212,7 +212,11 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 
                     <Card title={`Players (${lobby.players.length})`}>
                         <ul className="space-y-2">
-                            {lobby.players.map((p) => (
+                            {[...lobby.players].sort((a, b) => {
+                                if (a.id === playerId) return -1;
+                                if (b.id === playerId) return 1;
+                                return a.name.localeCompare(b.name);
+                            }).map((p) => (
                                 <li key={p.id} className="flex items-center justify-between bg-slate-700/50 p-3 rounded-lg">
                                     <div className="flex items-center gap-2">
                                         <span className={p.id === playerId ? "font-bold text-blue-300" : ""}>
