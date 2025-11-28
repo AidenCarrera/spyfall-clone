@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { getLobbyStateAction, startGameAction, leaveLobbyAction, resetGameAction, togglePauseAction, promoteHostAction, updateSettingsAction, kickPlayerAction, ClientLobbyState } from '../../actions';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -97,6 +98,10 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     }, [lobby?.status, lobby?.timerStartTime, lobby?.timerAccumulated, lobby?.isPaused, lobby?.timerDuration]);
 
     const handleStartGame = async () => {
+        if (!lobby) return;
+        if (lobby.players.length === 3 && (lobby.spyCount || 1) === 2) {
+            if (!confirm('Starting with 2 spies and only 3 players is not recommended. Are you sure you want to proceed?')) return;
+        }
         setIsRevealed(false);
         await startGameAction(code);
     };
@@ -180,7 +185,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsHelpOpen(true)}
-                                className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white px-2 py-1 rounded transition-colors"
+                                className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded transition-colors"
                             >
                                 Help
                             </button>
@@ -231,6 +236,56 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                             ) : (
                                 <span className="font-mono text-xl text-blue-400">{lobby.timerDuration || 8} min</span>
                             )}
+                        </div>
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700/50">
+                            <label className="text-slate-300">Spies</label>
+                            <div className="flex items-center gap-4">
+                                {isHost ? (
+                                    [1, 2].map((count) => {
+                                        const isSelected = (lobby.spyCount || 1) === count;
+                                        return (
+                                            <button
+                                                key={count}
+                                                onClick={() => {
+                                                    updateSettingsAction(code, { spyCount: count });
+                                                    // Optimistic update
+                                                    setLobby(prev => prev ? ({ ...prev, spyCount: count }) : null);
+                                                }}
+                                                className={`flex items-center gap-4 p-2 rounded transition-colors hover:bg-slate-800 cursor-pointer ${!isSelected ? 'opacity-50' : ''}`}
+                                            >
+                                                <div className={`w-3 h-3 rounded-full border border-blue-400 transition-colors ${isSelected ? 'bg-blue-400' : 'bg-transparent'
+                                                    }`} />
+
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: count }).map((_, i) => (
+                                                        <Image
+                                                            key={i}
+                                                            src="/Spy.png"
+                                                            alt="Spy"
+                                                            width={24}
+                                                            height={24}
+                                                            className="w-6 h-6"
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </button>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="flex items-center gap-1 px-2 py-1">
+                                        {Array.from({ length: lobby.spyCount || 1 }).map((_, i) => (
+                                            <Image
+                                                key={i}
+                                                src="/Spy.png"
+                                                alt="Spy"
+                                                width={24}
+                                                height={24}
+                                                className="w-6 h-6"
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </Card>
 
@@ -297,6 +352,26 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     return (
         <main className="min-h-screen p-4 bg-gradient-to-b from-slate-900 to-slate-950 text-white">
             <div className="max-w-md mx-auto space-y-6">
+                <header className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2" onClick={() => {
+                        if (confirm('Return to title screen? You will leave the current game.')) {
+                            router.push('/');
+                        }
+                    }}>
+                        <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter cursor-pointer">
+                            SPYFALL
+                        </h1>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setIsHelpOpen(true)}
+                            className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded transition-colors"
+                        >
+                            Help
+                        </button>
+                    </div>
+                </header>
+
                 <div className="flex justify-between items-center">
                     <div className="text-sm text-slate-400 flex items-center gap-2">
                         <span>Game in progress</span>
@@ -307,12 +382,6 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setIsHelpOpen(true)}
-                            className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded transition-colors"
-                        >
-                            Help
-                        </button>
                         {isHost && (
                             <div className="flex gap-2">
                                 {!isTimeUp && (

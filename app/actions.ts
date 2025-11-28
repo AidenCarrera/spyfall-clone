@@ -41,7 +41,7 @@ export async function promoteHostAction(code: string, newHostId: string) {
     return { success: true };
 }
 
-export async function updateSettingsAction(code: string, settings: { timerDuration: number }) {
+export async function updateSettingsAction(code: string, settings: { timerDuration?: number; spyCount?: number }) {
     store.updateSettings(code, settings);
     return { success: true };
 }
@@ -62,6 +62,7 @@ export interface ClientLobbyState {
     timerAccumulated?: number;
     isPaused?: boolean;
     timerDuration?: number;
+    spyCount?: number;
     isSpy?: boolean;
 }
 
@@ -82,6 +83,7 @@ export async function getLobbyStateAction(code: string, playerId: string): Promi
         timerAccumulated: lobby.timerAccumulated,
         isPaused: lobby.isPaused,
         timerDuration: lobby.settings.timerDuration,
+        spyCount: lobby.settings.spyCount,
     };
 
     if (lobby.status === 'IN_PROGRESS') {
