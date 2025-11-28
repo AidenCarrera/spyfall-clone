@@ -1,8 +1,14 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from './components/Button';
 import { Card } from './components/Card';
+import { HelpModal } from './components/HelpModal';
 
 export default function Home() {
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-slate-900 to-slate-950">
       <div className="w-full max-w-md space-y-8">
@@ -36,12 +42,23 @@ export default function Home() {
               Join Existing Game
             </Button>
           </Link>
+
+          <Button
+            fullWidth
+            variant="secondary"
+            className="h-12 text-base border-slate-700 bg-slate-800/50 hover:bg-slate-800"
+            onClick={() => setIsHelpOpen(true)}
+          >
+            How to Play
+          </Button>
         </Card>
 
         <div className="text-center text-sm text-slate-600">
           <p>A clone of the original Spyfall by Alexandr Ushan</p>
         </div>
       </div>
+
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </main>
   );
 }

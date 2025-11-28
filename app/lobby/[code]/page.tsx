@@ -2,9 +2,10 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { getLobbyStateAction, startGameAction, leaveLobbyAction, resetGameAction, togglePauseAction, promoteHostAction, updateSettingsAction, ClientLobbyState } from '../../actions';
+import { getLobbyStateAction, startGameAction, leaveLobbyAction, resetGameAction, togglePauseAction, promoteHostAction, updateSettingsAction, kickPlayerAction, ClientLobbyState } from '../../actions';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { HelpModal } from '../../components/HelpModal';
 import gameData from '../../lib/game-data.json';
 
 // Polling interval in ms
@@ -20,6 +21,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     const [playerId, setPlayerId] = useState<string | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
 
     // Timer state
     const [timeLeft, setTimeLeft] = useState<string>('');
@@ -100,6 +102,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     };
 
     const handleLeave = async () => {
+        if (!confirm('Are you sure you want to leave the game?')) return;
         if (playerId) {
             await leaveLobbyAction(code, playerId);
             sessionStorage.removeItem(`spyfall_pid_${code}`);
@@ -108,6 +111,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     };
 
     const handleReset = async () => {
+        if (!isTimeUp && !confirm('Are you sure you want to end the game early?')) return;
         setIsRevealed(false);
         await resetGameAction(code);
     };
@@ -161,8 +165,28 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     // LOBBY VIEW
     if (lobby.status === 'LOBBY') {
         return (
-            <main className="min-h-screen p-4 bg-slate-950 text-white">
+            <main className="min-h-screen p-4 bg-gradient-to-b from-slate-900 to-slate-950 text-white">
                 <div className="max-w-md mx-auto space-y-6">
+                    <header className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-2" onClick={() => {
+                            if (confirm('Return to title screen? You will leave the current game.')) {
+                                router.push('/');
+                            }
+                        }}>
+                            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter cursor-pointer">
+                                SPYFALL
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setIsHelpOpen(true)}
+                                className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white px-2 py-1 rounded transition-colors"
+                            >
+                                Help
+                            </button>
+                        </div>
+                    </header>
+
                     <div className="flex justify-between items-center">
                         <h1 className="text-2xl font-bold">Lobby</h1>
                         <Button variant="outline" onClick={handleLeave} className="text-sm px-3 py-1">
@@ -191,7 +215,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                                     >
                                         -
                                     </button>
-                                    <span className="w-8 text-center font-mono text-xl">{lobby.timerDuration || 8}</span>
+                                    <span className="w-8 text-center font-mono text-xl text-blue-400">{lobby.timerDuration || 8}</span>
                                     <button
                                         onClick={() => {
                                             const newDuration = Math.min(60, (lobby.timerDuration || 8) + 1);
@@ -227,16 +251,28 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                                         )}
                                     </div>
                                     {isHost && !p.isHost && (
-                                        <button
-                                            onClick={() => {
-                                                if (confirm(`Are you sure you want to make ${p.name} the host? You will lose host privileges.`)) {
-                                                    promoteHostAction(code, p.id);
-                                                }
-                                            }}
-                                            className="text-xs bg-slate-600 hover:bg-slate-500 text-slate-300 px-2 py-1 rounded transition-colors"
-                                        >
-                                            Make Host
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm(`Are you sure you want to make ${p.name} the host? You will lose host privileges.`)) {
+                                                        promoteHostAction(code, p.id);
+                                                    }
+                                                }}
+                                                className="text-xs bg-slate-600 hover:bg-slate-500 text-slate-300 px-2 py-1 rounded transition-colors"
+                                            >
+                                                Make Host
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm(`Are you sure you want to kick ${p.name}?`)) {
+                                                        kickPlayerAction(code, p.id);
+                                                    }
+                                                }}
+                                                className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-red-400 px-2 py-1 rounded transition-colors"
+                                            >
+                                                Kick
+                                            </button>
+                                        </div>
                                     )}
                                 </li>
                             ))}
@@ -250,6 +286,8 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                     ) : (
                         <p className="text-center text-slate-500 animate-pulse">Waiting for host to start...</p>
                     )}
+
+                    <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
                 </div>
             </main>
         );
@@ -257,7 +295,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 
     // GAME VIEW
     return (
-        <main className="min-h-screen p-4 bg-slate-950 text-white">
+        <main className="min-h-screen p-4 bg-gradient-to-b from-slate-900 to-slate-950 text-white">
             <div className="max-w-md mx-auto space-y-6">
                 <div className="flex justify-between items-center">
                     <div className="text-sm text-slate-400 flex items-center gap-2">
@@ -268,18 +306,26 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                             </span>
                         )}
                     </div>
-                    {isHost && (
-                        <div className="flex gap-2">
-                            {!isTimeUp && (
-                                <Button variant="secondary" onClick={handleTogglePause} className="text-xs px-2 py-1">
-                                    {lobby.isPaused ? "Resume" : "Pause"}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsHelpOpen(true)}
+                            className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded transition-colors"
+                        >
+                            Help
+                        </button>
+                        {isHost && (
+                            <div className="flex gap-2">
+                                {!isTimeUp && (
+                                    <Button variant="secondary" onClick={handleTogglePause} className="text-xs px-2 py-1">
+                                        {lobby.isPaused ? "Resume" : "Pause"}
+                                    </Button>
+                                )}
+                                <Button variant="danger" onClick={handleReset} className="text-xs px-2 py-1">
+                                    End Game
                                 </Button>
-                            )}
-                            <Button variant="danger" onClick={handleReset} className="text-xs px-2 py-1">
-                                End Game
-                            </Button>
-                        </div>
-                    )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <Card className="text-center space-y-4 border-blue-500/30 shadow-blue-900/20">
@@ -288,9 +334,9 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 
                         {isRevealed ? (
                             <div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-4 rounded-lg border border-slate-700/50">
                                     <p className="text-3xl font-bold text-white">{lobby.isSpy ? "Spy" : lobby.me?.role}</p>
-                                    <div className="pt-2 border-t border-slate-700 mt-2">
+                                    <div className="pt-2 border-t border-slate-700/50 mt-2">
                                         <p className="text-slate-400 text-xs uppercase">Location</p>
                                         <p className="text-2xl font-bold text-blue-400">{lobby.isSpy ? "????" : lobby.location}</p>
                                     </div>
@@ -322,7 +368,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                             <div
                                 key={loc.location}
                                 className={`p-2 rounded text-sm text-center transition-colors cursor-pointer select-none
-                            ${lobby.location === loc.location && isRevealed && !lobby.isSpy
+                                ${lobby.location === loc.location && isRevealed && !lobby.isSpy
                                         ? "bg-blue-900/30 text-blue-200 border border-blue-500/30"
                                         : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                                     }`}
@@ -336,6 +382,8 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                         ))}
                     </div>
                 </div>
+
+                <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
             </div>
         </main>
     );

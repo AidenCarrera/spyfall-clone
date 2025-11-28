@@ -41,7 +41,7 @@ export default function JoinLobby() {
     };
 
     return (
-        <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-950">
+        <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-slate-900 to-slate-950">
             <div className="w-full max-w-md">
                 <div className="mb-8">
                     <Link href="/" className="text-slate-400 hover:text-white transition-colors flex items-center gap-2">

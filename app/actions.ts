@@ -21,6 +21,11 @@ export async function leaveLobbyAction(code: string, playerId: string) {
     return { success: true };
 }
 
+export async function kickPlayerAction(code: string, playerId: string) {
+    store.leaveLobby(code, playerId);
+    return { success: true };
+}
+
 export async function startGameAction(code: string) {
     store.startGame(code);
     return { success: true };
