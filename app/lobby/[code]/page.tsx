@@ -9,7 +9,6 @@ import { Card } from '../../components/Card';
 import { HelpModal } from '../../components/HelpModal';
 import gameData from '../../lib/game-data.json';
 
-// Polling interval in ms
 const POLLING_INTERVAL = 2000;
 
 export default function LobbyPage({ params }: { params: Promise<{ code: string }> }) {
@@ -30,7 +29,6 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 
     // Initial setup and polling
     useEffect(() => {
-        // Get playerId from storage
         const storedPid = sessionStorage.getItem(`spyfall_pid_${code}`);
         if (!storedPid) {
             router.push(`/join?code=${code}`);
@@ -56,7 +54,6 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
         return () => clearInterval(interval);
     }, [code, router]);
 
-    // Role visibility reset
     useEffect(() => {
         if (lobby?.status === 'LOBBY') {
             setIsRevealed(false);

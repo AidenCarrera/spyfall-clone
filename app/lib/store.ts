@@ -48,7 +48,6 @@ const LOBBY_TTL = 86400; // 24 hours in seconds
 export const store = {
   createLobby: async (hostName: string): Promise<Lobby> => {
     let code = generateCode();
-    // Simple collision check - in a high volume app we'd want something more robust
     while (await redis.exists(`lobby:${code}`)) {
       code = generateCode();
     }
@@ -106,13 +105,6 @@ export const store = {
 
   getLobby: async (code: string): Promise<Lobby | undefined> => {
     const lobby = await redis.get<Lobby>(`lobby:${code.toUpperCase()}`);
-    if (lobby) {
-      // Update TTL on activity
-      // We don't necessarily need to write back the whole object just to update TTL, 
-      // but updating lastActivity is good for app logic.
-      // To avoid excessive writes, we could only write back if significant time passed, 
-      // but for now let's keep it simple.
-    }
     return lobby || undefined;
   },
 
@@ -140,7 +132,7 @@ export const store = {
     if (!lobby) return;
 
     // Select random location
-    const locations = gameData.spyfall1; // Extend logic for Spyfall 2 later if needed
+    const locations = gameData.spyfall1;
     const randomLocIndex = Math.floor(Math.random() * locations.length);
     const selectedLocation = locations[randomLocIndex];
 
@@ -172,7 +164,7 @@ export const store = {
         spiesAssigned++;
       } else {
         originalPlayer.isSpy = false;
-        // Assign random role from list, loop if fewer roles than players (unlikely in standard Spyfall but possible)
+        // Assign random role from list, loop if fewer roles than players
         const roleIndex = index % roles.length;
         originalPlayer.role = roles[roleIndex];
       }

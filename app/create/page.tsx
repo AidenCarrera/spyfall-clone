@@ -29,10 +29,6 @@ export default function CreateLobby() {
             if (result.error) {
                 setError(result.error);
             } else {
-                // Store playerId in localStorage or cookie if needed, but for now we'll pass it via URL or state?
-                // Actually, passing via URL is risky/ugly. Better to store in sessionStorage or a cookie.
-                // For simplicity in this clone, let's append it to the URL hash or query param temporarily, 
-                // or better yet, use sessionStorage since it's a SPA feel.
                 sessionStorage.setItem(`spyfall_pid_${result.code}`, result.playerId!);
                 router.push(`/lobby/${result.code}`);
             }

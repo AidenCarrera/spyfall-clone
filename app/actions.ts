@@ -96,7 +96,6 @@ export async function togglePauseAction(code: string) {
     }
 }
 
-// Sanitized lobby type for frontend
 export interface ClientLobbyState {
     code: string;
     players: { name: string; isHost: boolean; id: string }[];
@@ -135,7 +134,6 @@ export async function getLobbyStateAction(code: string, playerId: string): Promi
         if (lobby.status === 'IN_PROGRESS') {
             if (me.isSpy) {
                 clientLobby.isSpy = true;
-                // Spy doesn't see location
             } else {
                 clientLobby.isSpy = false;
                 clientLobby.location = lobby.location;
