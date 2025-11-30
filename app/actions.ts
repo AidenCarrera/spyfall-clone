@@ -4,50 +4,50 @@ import { store, Lobby, Player } from './lib/store';
 
 export async function createLobbyAction(hostName: string) {
     if (!hostName) return { error: 'Host name is required' };
-    const lobby = store.createLobby(hostName);
+    const lobby = await store.createLobby(hostName);
     // Return the host's player ID (it's the first player)
     return { code: lobby.code, playerId: lobby.players[0].id };
 }
 
 export async function joinLobbyAction(code: string, playerName: string) {
     if (!code || !playerName) return { error: 'Code and name are required' };
-    const result = store.joinLobby(code, playerName);
+    const result = await store.joinLobby(code, playerName);
     if (result.error) return { error: result.error };
     return { code: result.lobby!.code, playerId: result.playerId };
 }
 
 export async function leaveLobbyAction(code: string, playerId: string) {
-    store.leaveLobby(code, playerId);
+    await store.leaveLobby(code, playerId);
     return { success: true };
 }
 
 export async function kickPlayerAction(code: string, playerId: string) {
-    store.leaveLobby(code, playerId);
+    await store.kickPlayer(code, playerId);
     return { success: true };
 }
 
 export async function startGameAction(code: string) {
-    store.startGame(code);
+    await store.startGame(code);
     return { success: true };
 }
 
 export async function resetGameAction(code: string) {
-    store.resetGame(code);
+    await store.resetGame(code);
     return { success: true };
 }
 
 export async function promoteHostAction(code: string, newHostId: string) {
-    store.promoteHost(code, newHostId);
+    await store.promoteHost(code, newHostId);
     return { success: true };
 }
 
 export async function updateSettingsAction(code: string, settings: { timerDuration?: number; spyCount?: number }) {
-    store.updateSettings(code, settings);
+    await store.updateSettings(code, settings);
     return { success: true };
 }
 
 export async function togglePauseAction(code: string) {
-    store.togglePause(code);
+    await store.togglePause(code);
     return { success: true };
 }
 
@@ -67,7 +67,7 @@ export interface ClientLobbyState {
 }
 
 export async function getLobbyStateAction(code: string, playerId: string): Promise<{ lobby?: ClientLobbyState; error?: string }> {
-    const lobby = store.getLobby(code);
+    const lobby = await store.getLobby(code);
     if (!lobby) return { error: 'Lobby not found' };
 
     const me = lobby.players.find((p) => p.id === playerId);

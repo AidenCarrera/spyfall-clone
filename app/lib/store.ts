@@ -1,3 +1,4 @@
+import { redis } from './redis';
 import gameData from './game-data.json';
 
 export type Role = string;
@@ -32,17 +33,6 @@ export interface Lobby {
   lastActivity: number; // for cleanup
 }
 
-// Global store to persist across dev reloads
-const globalStore = global as unknown as {
-  spyfallLobbies: Map<string, Lobby>;
-};
-
-if (!globalStore.spyfallLobbies) {
-  globalStore.spyfallLobbies = new Map();
-}
-
-const lobbies = globalStore.spyfallLobbies;
-
 // Helper to generate a random code
 function generateCode(length: number = 6): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -53,10 +43,13 @@ function generateCode(length: number = 6): string {
   return result;
 }
 
+const LOBBY_TTL = 86400; // 24 hours in seconds
+
 export const store = {
-  createLobby: (hostName: string): Lobby => {
+  createLobby: async (hostName: string): Promise<Lobby> => {
     let code = generateCode();
-    while (lobbies.has(code)) {
+    // Simple collision check - in a high volume app we'd want something more robust
+    while (await redis.exists(`lobby:${code}`)) {
       code = generateCode();
     }
 
@@ -80,12 +73,12 @@ export const store = {
       lastActivity: Date.now(),
     };
 
-    lobbies.set(code, lobby);
+    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
     return lobby;
   },
 
-  joinLobby: (code: string, playerName: string): { lobby?: Lobby; error?: string; playerId?: string } => {
-    const lobby = lobbies.get(code.toUpperCase());
+  joinLobby: async (code: string, playerName: string): Promise<{ lobby?: Lobby; error?: string; playerId?: string }> => {
+    const lobby = await store.getLobby(code);
     if (!lobby) {
       return { error: 'Lobby not found' };
     }
@@ -106,36 +99,44 @@ export const store = {
 
     lobby.players.push(player);
     lobby.lastActivity = Date.now();
+
+    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
     return { lobby, playerId: player.id };
   },
 
-  getLobby: (code: string): Lobby | undefined => {
-    const lobby = lobbies.get(code.toUpperCase());
+  getLobby: async (code: string): Promise<Lobby | undefined> => {
+    const lobby = await redis.get<Lobby>(`lobby:${code.toUpperCase()}`);
     if (lobby) {
-      lobby.lastActivity = Date.now();
+      // Update TTL on activity
+      // We don't necessarily need to write back the whole object just to update TTL, 
+      // but updating lastActivity is good for app logic.
+      // To avoid excessive writes, we could only write back if significant time passed, 
+      // but for now let's keep it simple.
     }
-    return lobby;
+    return lobby || undefined;
   },
 
-  leaveLobby: (code: string, playerId: string) => {
-    const lobby = lobbies.get(code.toUpperCase());
+  leaveLobby: async (code: string, playerId: string) => {
+    const lobby = await store.getLobby(code);
     if (!lobby) return;
 
     lobby.players = lobby.players.filter((p) => p.id !== playerId);
 
     // If host leaves, assign new host or delete lobby if empty
     if (lobby.players.length === 0) {
-      lobbies.delete(code);
+      await redis.del(`lobby:${code}`);
     } else {
       const hostLeft = !lobby.players.some(p => p.isHost);
       if (hostLeft) {
         lobby.players[0].isHost = true;
       }
+      lobby.lastActivity = Date.now();
+      await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
     }
   },
 
-  startGame: (code: string) => {
-    const lobby = lobbies.get(code.toUpperCase());
+  startGame: async (code: string) => {
+    const lobby = await store.getLobby(code);
     if (!lobby) return;
 
     // Select random location
@@ -176,10 +177,13 @@ export const store = {
         originalPlayer.role = roles[roleIndex];
       }
     });
+
+    lobby.lastActivity = Date.now();
+    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
   },
 
-  togglePause: (code: string) => {
-    const lobby = lobbies.get(code.toUpperCase());
+  togglePause: async (code: string) => {
+    const lobby = await store.getLobby(code);
     if (!lobby || lobby.status !== 'IN_PROGRESS') return;
 
     if (lobby.isPaused) {
@@ -193,10 +197,13 @@ export const store = {
       lobby.timerStartTime = undefined;
       lobby.isPaused = true;
     }
+
+    lobby.lastActivity = Date.now();
+    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
   },
 
-  endGame: (code: string) => {
-    const lobby = lobbies.get(code.toUpperCase());
+  endGame: async (code: string) => {
+    const lobby = await store.getLobby(code);
     if (!lobby) return;
 
     lobby.status = 'FINISHED';
@@ -208,10 +215,13 @@ export const store = {
       p.role = undefined;
       p.isSpy = undefined;
     });
+
+    lobby.lastActivity = Date.now();
+    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
   },
 
-  resetGame: (code: string) => {
-    const lobby = lobbies.get(code.toUpperCase());
+  resetGame: async (code: string) => {
+    const lobby = await store.getLobby(code);
     if (!lobby) return;
 
     lobby.status = 'LOBBY';
@@ -223,10 +233,13 @@ export const store = {
       p.role = undefined;
       p.isSpy = undefined;
     });
+
+    lobby.lastActivity = Date.now();
+    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
   },
 
-  promoteHost: (code: string, newHostId: string) => {
-    const lobby = lobbies.get(code.toUpperCase());
+  promoteHost: async (code: string, newHostId: string) => {
+    const lobby = await store.getLobby(code);
     if (!lobby) return;
 
     const newHost = lobby.players.find(p => p.id === newHostId);
@@ -237,12 +250,33 @@ export const store = {
 
     // Assign new host
     newHost.isHost = true;
+
+    lobby.lastActivity = Date.now();
+    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
   },
 
-  updateSettings: (code: string, settings: Partial<GameSettings>) => {
-    const lobby = lobbies.get(code.toUpperCase());
+  kickPlayer: async (code: string, playerId: string) => {
+    const lobby = await store.getLobby(code);
+    if (!lobby) return;
+
+    lobby.players = lobby.players.filter((p) => p.id !== playerId);
+
+    // If lobby becomes empty, delete it
+    if (lobby.players.length === 0) {
+      await redis.del(`lobby:${code}`);
+    } else {
+      lobby.lastActivity = Date.now();
+      await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+    }
+  },
+
+  updateSettings: async (code: string, settings: Partial<GameSettings>) => {
+    const lobby = await store.getLobby(code);
     if (!lobby) return;
 
     lobby.settings = { ...lobby.settings, ...settings };
+
+    lobby.lastActivity = Date.now();
+    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
   }
 };
