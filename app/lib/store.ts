@@ -132,7 +132,7 @@ export const store = {
     if (!lobby) return;
 
     // Select random location
-    const locations = gameData.spyfall1;
+    const locations = gameData.spyfall1; // Extend logic for Spyfall 2 later if needed
     const randomLocIndex = Math.floor(Math.random() * locations.length);
     const selectedLocation = locations[randomLocIndex];
 

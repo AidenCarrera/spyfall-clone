@@ -243,9 +243,8 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                                         return (
                                             <button
                                                 key={count}
-                                                onClick={() => {
-                                                    updateSettingsAction(code, { spyCount: count });
-                                                    // Optimistic update
+                                                onClick={async () => {
+                                                    await updateSettingsAction(code, { spyCount: count });
                                                     setLobby(prev => prev ? ({ ...prev, spyCount: count }) : null);
                                                 }}
                                                 className={`flex items-center gap-4 p-2 rounded transition-colors hover:bg-slate-800 cursor-pointer ${!isSelected ? 'opacity-50' : ''}`}
@@ -305,9 +304,9 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                                     {isHost && !p.isHost && (
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     if (confirm(`Are you sure you want to make ${p.name} the host? You will lose host privileges.`)) {
-                                                        promoteHostAction(code, p.id);
+                                                        await promoteHostAction(code, p.id);
                                                     }
                                                 }}
                                                 className="text-xs bg-slate-600 hover:bg-slate-500 text-slate-300 px-2 py-1 rounded transition-colors"
@@ -315,9 +314,9 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                                                 Make Host
                                             </button>
                                             <button
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     if (confirm(`Are you sure you want to kick ${p.name}?`)) {
-                                                        kickPlayerAction(code, p.id);
+                                                        await kickPlayerAction(code, p.id);
                                                     }
                                                 }}
                                                 className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-red-400 px-2 py-1 rounded transition-colors"
@@ -331,17 +330,19 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                         </ul>
                     </Card>
 
-                    {isHost ? (
-                        <Button fullWidth onClick={handleStartGame} disabled={lobby.players.length < 3}>
-                            Start Game {lobby.players.length < 3 && "(Need 3+ players)"}
-                        </Button>
-                    ) : (
-                        <p className="text-center text-slate-500 animate-pulse">Waiting for host to start...</p>
-                    )}
+                    {
+                        isHost ? (
+                            <Button fullWidth onClick={handleStartGame} disabled={lobby.players.length < 3}>
+                                Start Game {lobby.players.length < 3 && "(Need 3+ players)"}
+                            </Button>
+                        ) : (
+                            <p className="text-center text-slate-500 animate-pulse">Waiting for host to start...</p>
+                        )
+                    }
 
                     <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-                </div>
-            </main>
+                </div >
+            </main >
         );
     }
 
