@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
   title: "Spyfall",
   description: "A modern, real-time web version of the popular party game Spyfall. Play with friends, no account required. Features mobile-friendly design, custom settings, and multiple locations.",
   keywords: ["spyfall", "party game", "social deduction", "board game", "online game", "multiplayer", "spy game"],
@@ -49,6 +50,23 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Spyfall Clone",
+              url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+              description: "A modern, real-time web version of the popular party game Spyfall.",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/?q={search_term_string}`,
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
       </body>
     </html>
   );
