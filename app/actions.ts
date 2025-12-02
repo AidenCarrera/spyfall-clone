@@ -1,11 +1,25 @@
 'use server';
 
 import { store, Lobby, Player } from './lib/store';
+import { z } from 'zod';
+
+const CreateLobbySchema = z.object({
+    hostName: z.string().trim().min(1, "Host name is required").max(20, "Host name must be 20 characters or less")
+});
+
+const JoinLobbySchema = z.object({
+    code: z.string().trim().length(6, "Code must be 6 characters"),
+    playerName: z.string().trim().min(1, "Player name is required").max(20, "Player name must be 20 characters or less")
+});
 
 export async function createLobbyAction(hostName: string) {
     try {
-        if (!hostName) return { error: 'Host name is required' };
-        const lobby = await store.createLobby(hostName);
+        const result = CreateLobbySchema.safeParse({ hostName });
+        if (!result.success) {
+            return { error: result.error.issues[0].message };
+        }
+
+        const lobby = await store.createLobby(result.data.hostName);
         // Return the host's player ID (it's the first player)
         return { code: lobby.code, playerId: lobby.players[0].id };
     } catch (error) {
@@ -16,10 +30,14 @@ export async function createLobbyAction(hostName: string) {
 
 export async function joinLobbyAction(code: string, playerName: string) {
     try {
-        if (!code || !playerName) return { error: 'Code and name are required' };
-        const result = await store.joinLobby(code, playerName);
-        if (result.error) return { error: result.error };
-        return { code: result.lobby!.code, playerId: result.playerId };
+        const result = JoinLobbySchema.safeParse({ code, playerName });
+        if (!result.success) {
+            return { error: result.error.issues[0].message };
+        }
+
+        const joinResult = await store.joinLobby(result.data.code, result.data.playerName);
+        if (joinResult.error) return { error: joinResult.error };
+        return { code: joinResult.lobby!.code, playerId: joinResult.playerId };
     } catch (error) {
         console.error('joinLobbyAction error:', error);
         return { error: 'Failed to join lobby. Please check the code and try again.' };

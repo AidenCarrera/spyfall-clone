@@ -43,7 +43,7 @@ function generateCode(length: number = 6): string {
   return result;
 }
 
-const LOBBY_TTL = 86400; // 24 hours in seconds
+export const LOBBY_TTL = 86400; // 24 hours in seconds
 
 export const store = {
   createLobby: async (hostName: string): Promise<Lobby> => {
