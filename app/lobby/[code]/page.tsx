@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -12,14 +13,11 @@ import {
   promoteHostAction,
   updateSettingsAction,
   kickPlayerAction,
-  ClientLobbyState,
 } from "../../actions";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { HelpModal } from "../../components/HelpModal";
 import gameData from "../../lib/game-data.json";
-
-const POLLING_INTERVAL = 1000;
 
 export default function LobbyPage({
   params,
@@ -30,11 +28,8 @@ export default function LobbyPage({
   const code = resolvedParams.code;
   const router = useRouter();
 
-  const [lobby, setLobby] = useState<ClientLobbyState | null>(null);
-  const [error, setError] = useState("");
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   // Timer state
@@ -42,47 +37,59 @@ export default function LobbyPage({
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [timeOffset, setTimeOffset] = useState(0);
 
-  // Initial setup and polling
+  // SWR Data Fetching
+  const {
+    data: lobbyData,
+    error: lobbyError,
+    mutate,
+  } = useSWR(
+    playerId ? ["lobby", code, playerId] : null,
+    ([, c, pid]) => getLobbyStateAction(c, pid),
+    {
+      refreshInterval: 1000,
+      revalidateOnFocus: true,
+      dedupingInterval: 500,
+    }
+  );
+
+  const lobby = lobbyData?.lobby;
+  const error = lobbyError || lobbyData?.error;
+  const isLoading = !lobbyData && !lobbyError;
+
+  // Initial setup (Hydration)
   useEffect(() => {
     const storedPid = sessionStorage.getItem(`spyfall_pid_${code}`);
     if (!storedPid) {
       router.push(`/join?code=${code}`);
       return;
     }
-    const fetchLobby = async () => {
-      const result = await getLobbyStateAction(code, storedPid);
-      if (result.error) {
-        setError(result.error);
-        if (result.error === "Lobby not found") {
-          router.push("/");
-        }
-      } else {
-        setPlayerId(storedPid);
-        const newLobby = result.lobby!;
-        setLobby(newLobby);
+    if (storedPid !== playerId) {
+      // eslint-disable-next-line
+      setPlayerId(storedPid);
+    }
+  }, [code, router, playerId]);
 
-        // Handle side effects of lobby state
-        if (newLobby.status === "LOBBY") {
-          setIsRevealed(false);
-        }
+  // Handle side effects of lobby state changes
+  useEffect(() => {
+    if (lobby) {
+      if (lobby.status === "LOBBY" && isRevealed) {
+        // eslint-disable-next-line
+        setIsRevealed(false);
+      }
 
-        if (newLobby.status !== "IN_PROGRESS" || !newLobby.timerDuration) {
-          setTimeLeft("");
-          setIsTimeUp(false);
-        }
+      if (lobby.status !== "IN_PROGRESS" || !lobby.timerDuration) {
+        if (timeLeft !== "") setTimeLeft("");
+        if (isTimeUp) setIsTimeUp(false);
+      }
 
-        // Calculate time offset: serverTime - clientTime
-        // We use the time when we receive the response as an approximation of "now"
-        const offset = newLobby.serverTime - Date.now();
+      // Calculate time offset: serverTime - clientTime
+      const offset = lobby.serverTime - Date.now();
+      // Only update if offset changed significantly (e.g. > 100ms) to avoid jitter
+      if (Math.abs(offset - timeOffset) > 100) {
         setTimeOffset(offset);
       }
-      setLoading(false);
-    };
-
-    fetchLobby();
-    const interval = setInterval(fetchLobby, POLLING_INTERVAL);
-    return () => clearInterval(interval);
-  }, [code, router]);
+    }
+  }, [lobby, timeOffset, isRevealed, timeLeft, isTimeUp]);
 
   // Timer logic
   useEffect(() => {
@@ -120,14 +127,7 @@ export default function LobbyPage({
     updateTimer(); // Initial update
     const timerInterval = setInterval(updateTimer, 1000);
     return () => clearInterval(timerInterval);
-  }, [
-    lobby?.status,
-    lobby?.timerStartTime,
-    lobby?.timerAccumulated,
-    lobby?.isPaused,
-    lobby?.timerDuration,
-    timeOffset,
-  ]);
+  }, [lobby, timeOffset]);
 
   const handleStartGame = async () => {
     if (!lobby) return;
@@ -141,6 +141,7 @@ export default function LobbyPage({
     }
     setIsRevealed(false);
     await startGameAction(code);
+    mutate();
   };
 
   const handleLeave = async () => {
@@ -157,6 +158,7 @@ export default function LobbyPage({
       return;
     setIsRevealed(false);
     await resetGameAction(code);
+    mutate();
   };
 
   const handleTogglePause = async () => {
@@ -181,11 +183,14 @@ export default function LobbyPage({
       updatedLobby.timerStartTime = now;
     }
 
-    setLobby(updatedLobby);
+    // Apply optimistic update
+    await mutate({ lobby: updatedLobby }, { revalidate: false });
+
     await togglePauseAction(code);
+    mutate();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
         Loading...
@@ -266,18 +271,24 @@ export default function LobbyPage({
               {isHost ? (
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       const newDuration = Math.max(
                         1,
                         (lobby.timerDuration || 8) - 1
                       );
-                      updateSettingsAction(code, {
+
+                      // Optimistic update
+                      await mutate(
+                        {
+                          lobby: { ...lobby, timerDuration: newDuration },
+                        },
+                        { revalidate: false }
+                      );
+
+                      await updateSettingsAction(code, {
                         timerDuration: newDuration,
                       });
-                      // Optimistic update
-                      setLobby((prev) =>
-                        prev ? { ...prev, timerDuration: newDuration } : null
-                      );
+                      mutate();
                     }}
                     className="w-8 h-8 bg-slate-700 rounded hover:bg-slate-600 flex items-center justify-center text-xl font-bold"
                   >
@@ -287,18 +298,24 @@ export default function LobbyPage({
                     {lobby.timerDuration || 8}
                   </span>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       const newDuration = Math.min(
                         60,
                         (lobby.timerDuration || 8) + 1
                       );
-                      updateSettingsAction(code, {
+
+                      // Optimistic update
+                      await mutate(
+                        {
+                          lobby: { ...lobby, timerDuration: newDuration },
+                        },
+                        { revalidate: false }
+                      );
+
+                      await updateSettingsAction(code, {
                         timerDuration: newDuration,
                       });
-                      // Optimistic update
-                      setLobby((prev) =>
-                        prev ? { ...prev, timerDuration: newDuration } : null
-                      );
+                      mutate();
                     }}
                     className="w-8 h-8 bg-slate-700 rounded hover:bg-slate-600 flex items-center justify-center text-xl font-bold"
                   >
@@ -321,10 +338,16 @@ export default function LobbyPage({
                       <button
                         key={count}
                         onClick={async () => {
-                          await updateSettingsAction(code, { spyCount: count });
-                          setLobby((prev) =>
-                            prev ? { ...prev, spyCount: count } : null
+                          // Optimistic update
+                          await mutate(
+                            {
+                              lobby: { ...lobby, spyCount: count },
+                            },
+                            { revalidate: false }
                           );
+
+                          await updateSettingsAction(code, { spyCount: count });
+                          mutate();
                         }}
                         className={`flex items-center gap-4 p-2 rounded transition-colors hover:bg-slate-800 cursor-pointer ${
                           !isSelected ? "opacity-50" : ""
@@ -406,6 +429,7 @@ export default function LobbyPage({
                               )
                             ) {
                               await promoteHostAction(code, p.id);
+                              mutate();
                             }
                           }}
                           className="text-xs bg-slate-600 hover:bg-slate-500 text-slate-300 px-2 py-1 rounded transition-colors"
@@ -420,6 +444,7 @@ export default function LobbyPage({
                               )
                             ) {
                               await kickPlayerAction(code, p.id);
+                              mutate();
                             }
                           }}
                           className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-red-400 px-2 py-1 rounded transition-colors"
