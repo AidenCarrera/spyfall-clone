@@ -4,7 +4,8 @@ import { useState, useEffect, use } from "react";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Settings } from "lucide-react";
+import { EditLocationsModal } from "../../components/EditLocationsModal";
 import {
   getLobbyStateAction,
   startGameAction,
@@ -33,6 +34,7 @@ export default function LobbyPage({
   const [isRevealed, setIsRevealed] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isEditLocationsOpen, setIsEditLocationsOpen] = useState(false);
 
   // Timer state
   const [timeLeft, setTimeLeft] = useState<string>("");
@@ -294,9 +296,9 @@ export default function LobbyPage({
 
           <Card title="Game Settings">
             <div className="flex items-center justify-between">
-              <label className="text-slate-300">Timer Duration (mins)</label>
+              <label className="text-slate-400">Timer Duration (mins)</label>
               {isHost ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={async () => {
                       const newDuration = Math.max(
@@ -356,8 +358,8 @@ export default function LobbyPage({
               )}
             </div>
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700/50">
-              <label className="text-slate-300">Spies</label>
-              <div className="flex items-center gap-4">
+              <label className="text-slate-400">Spies</label>
+              <div className="flex items-center gap-2">
                 {isHost ? (
                   [1, 2].map((count) => {
                     const isSelected = (lobby.spyCount || 1) === count;
@@ -418,60 +420,60 @@ export default function LobbyPage({
               </div>
             </div>
             <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-700/50">
-              <label className="text-slate-300">Location Sets</label>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.keys(gameData).map((setKey) => {
-                  const isSelected = (
-                    lobby.locationSets || ["spyfall1"]
-                  ).includes(setKey);
-                  return (
-                    <button
-                      key={setKey}
-                      disabled={!isHost}
-                      onClick={async () => {
-                        if (!isHost) return;
-                        const currentSets = lobby.locationSets || ["spyfall1"];
-                        let newSets: string[];
-
-                        if (isSelected) {
-                          // Prevent deselecting the last set
-                          if (currentSets.length === 1) return;
-                          newSets = currentSets.filter((s) => s !== setKey);
-                        } else {
-                          newSets = [...currentSets, setKey];
-                        }
-
-                        // Optimistic update
-                        await mutate(
-                          {
-                            lobby: { ...lobby, locationSets: newSets },
-                          },
-                          { revalidate: false }
-                        );
-
-                        await updateSettingsAction(code, {
-                          locationSets: newSets,
-                        });
-                        mutate();
-                      }}
-                      className={`flex items-center justify-between p-2 rounded transition-colors border ${
-                        isSelected
-                          ? "bg-blue-900/30 border-blue-500/50 text-blue-200"
-                          : "bg-slate-800 border-transparent text-slate-400 hover:bg-slate-700"
-                      } ${
-                        !isHost ? "cursor-default opacity-80" : "cursor-pointer"
-                      }`}
-                    >
-                      <span className="capitalize">
-                        {setKey.replace(/([A-Z])/g, " $1").trim()}
-                      </span>
-                      {isSelected && (
-                        <Check className="w-4 h-4 text-blue-400" />
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="flex items-center justify-between">
+                <label className="text-slate-400">Locations</label>
+                <span
+                  className={
+                    isHost
+                      ? "text-xs text-blue-400 font-mono"
+                      : "font-mono text-xl text-blue-400"
+                  }
+                >
+                  {(lobby.selectedLocations || []).length} selected
+                </span>
               </div>
+
+              {isHost && (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsEditLocationsOpen(true)}
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Edit Locations
+                  </Button>
+
+                  <EditLocationsModal
+                    isOpen={isEditLocationsOpen}
+                    onClose={() => setIsEditLocationsOpen(false)}
+                    gameData={
+                      gameData as Record<
+                        string,
+                        { location: string; roles: string[] }[]
+                      >
+                    }
+                    selectedLocations={lobby.selectedLocations || []}
+                    onUpdate={async (newSelectedLocations) => {
+                      // Optimistic update
+                      await mutate(
+                        {
+                          lobby: {
+                            ...lobby,
+                            selectedLocations: newSelectedLocations,
+                          },
+                        },
+                        { revalidate: false }
+                      );
+
+                      await updateSettingsAction(code, {
+                        selectedLocations: newSelectedLocations,
+                      });
+                      mutate();
+                    }}
+                  />
+                </>
+              )}
             </div>
           </Card>
 
@@ -679,10 +681,10 @@ export default function LobbyPage({
           </h3>
           <div className="grid grid-cols-2 gap-1">
             {Object.entries(gameData)
-              .filter(([key]) =>
-                (lobby.locationSets || ["spyfall1"]).includes(key)
-              )
               .flatMap(([, locations]) => locations)
+              .filter((loc) =>
+                (lobby.selectedLocations || []).includes(loc.location)
+              )
               .sort((a, b) => a.location.localeCompare(b.location))
               .map((loc) => (
                 <div

@@ -15,7 +15,7 @@ export interface Player {
 export type GameStatus = 'LOBBY' | 'IN_PROGRESS' | 'FINISHED';
 
 export interface GameSettings {
-  locationSets: string[];
+  selectedLocations: string[];
   timerEnabled: boolean;
   timerDuration: number; // in minutes
   spyCount: number;
@@ -64,7 +64,7 @@ export const store = {
       status: 'LOBBY',
       isPaused: false,
       settings: {
-        locationSets: ['spyfall1'],
+        selectedLocations: gameData.spyfall1.map((l) => l.location),
         timerEnabled: false,
         timerDuration: 8,
         spyCount: 1,
@@ -131,18 +131,25 @@ export const store = {
     const lobby = await store.getLobby(code);
     if (!lobby) return;
 
-    // Select random location
-    const validSets = lobby.settings.locationSets.filter(set => set in gameData);
-    const typedGameData = gameData as Record<string, { location: string; roles: string[] }[]>;
-    const locations = validSets.flatMap(set => typedGameData[set]);
+    // Select random location from selectedLocations
+    const availableLocations = lobby.settings.selectedLocations;
     
-    if (locations.length === 0) {
-        // Fallback to spyfall1 if something goes wrong
-        locations.push(...gameData.spyfall1);
+    // Fallback if no locations selected
+    if (!availableLocations || availableLocations.length === 0) {
+        availableLocations.push(...gameData.spyfall1.map(l => l.location));
     }
 
-    const randomLocIndex = Math.floor(Math.random() * locations.length);
-    const selectedLocation = locations[randomLocIndex];
+    const randomLocIndex = Math.floor(Math.random() * availableLocations.length);
+    const selectedLocationName = availableLocations[randomLocIndex];
+    
+    // Find the location object to get roles
+    const allLocations = Object.values(gameData as Record<string, { location: string; roles: string[] }[]>).flat();
+    const selectedLocation = allLocations.find(l => l.location === selectedLocationName);
+
+    if (!selectedLocation) {
+        console.error("Selected location not found in game data:", selectedLocationName);
+        return; // Should not happen
+    }
 
     lobby.location = selectedLocation.location;
     lobby.status = 'IN_PROGRESS';

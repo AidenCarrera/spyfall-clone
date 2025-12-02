@@ -108,7 +108,7 @@ export async function promoteHostAction(code: string, newHostId: string) {
     }
 }
 
-export async function updateSettingsAction(code: string, settings: { timerDuration?: number; spyCount?: number; locationSets?: string[] }) {
+export async function updateSettingsAction(code: string, settings: { timerDuration?: number; spyCount?: number; selectedLocations?: string[] }) {
     try {
         await store.updateSettings(code, settings);
         return { success: true };
@@ -139,7 +139,7 @@ export interface ClientLobbyState {
     isPaused?: boolean;
     timerDuration?: number;
     spyCount?: number;
-    locationSets?: string[];
+    selectedLocations?: string[];
     isSpy?: boolean;
     serverTime: number;
 }
@@ -163,7 +163,7 @@ export async function getLobbyStateAction(code: string, playerId: string): Promi
             isPaused: lobby.isPaused,
             timerDuration: lobby.settings.timerDuration,
             spyCount: lobby.settings.spyCount,
-            locationSets: lobby.settings.locationSets,
+            selectedLocations: lobby.settings.selectedLocations,
             serverTime: Date.now(),
         };
 
