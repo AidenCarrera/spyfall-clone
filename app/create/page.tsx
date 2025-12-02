@@ -29,7 +29,7 @@ export default function CreateLobby() {
       if (result.error) {
         setError(result.error);
       } else {
-        sessionStorage.setItem(`spyfall_pid_${result.code}`, result.playerId!);
+        localStorage.setItem(`spyfall_pid_${result.code}`, result.playerId!);
         router.push(`/lobby/${result.code}`);
       }
     } catch {

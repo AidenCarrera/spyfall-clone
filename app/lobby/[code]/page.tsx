@@ -55,7 +55,7 @@ export default function LobbyPage({
 
   // Initial setup (Hydration)
   useEffect(() => {
-    const storedPid = sessionStorage.getItem(`spyfall_pid_${code}`);
+    const storedPid = localStorage.getItem(`spyfall_pid_${code}`);
     if (!storedPid) {
       router.push(`/join?code=${code}`);
       return;
@@ -180,7 +180,7 @@ export default function LobbyPage({
     if (!confirm("Are you sure you want to leave the game?")) return;
     if (playerId) {
       await leaveLobbyAction(code, playerId);
-      sessionStorage.removeItem(`spyfall_pid_${code}`);
+      localStorage.removeItem(`spyfall_pid_${code}`);
       router.push("/");
     }
   };
