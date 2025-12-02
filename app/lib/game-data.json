@@ -1,27 +1,27 @@
 {
   "spyfall1": [
     {
-      "location": "Airplane",
+      "location": "Aeroplane",
       "roles": [
         "First Class Passenger",
-        "Air Marshal",
-        "Mechanic",
+        "On-board Security",
+        "Serviceman",
         "Economy Class Passenger",
-        "Stewardess",
-        "Co-Pilot",
+        "Flight Attendant",
+        "Secondary Pilot",
         "Captain"
       ]
     },
     {
       "location": "Bank",
       "roles": [
-        "Armored Car Driver",
+        "Armoured Car Driver",
         "Manager",
         "Consultant",
         "Customer",
         "Robber",
         "Security Guard",
-        "Teller"
+        "Clerk"
       ]
     },
     {
@@ -30,18 +30,18 @@
         "Beach Waitress",
         "Kite Surfer",
         "Lifeguard",
-        "Thief",
+        "Mugger",
+        "Beach Goer",
         "Beach Photographer",
-        "Ice Cream Truck Driver",
-        "Beach Goer"
+        "Ice Cream Van Driver"
       ]
     },
     {
-      "location": "Broadway Theater",
+      "location": "Boulevard Theatre",
       "roles": [
-        "Coat Check Lady",
+        "Coat Check Assistant",
         "Prompter",
-        "Cashier",
+        "Cash Assistant",
         "Visitor",
         "Director",
         "Actor",
@@ -51,9 +51,9 @@
     {
       "location": "Casino",
       "roles": [
-        "Bartender",
+        "Publican",
         "Head Security Guard",
-        "Bouncer",
+        "Muscle",
         "Manager",
         "Hustler",
         "Dealer",
@@ -89,7 +89,7 @@
       "roles": [
         "Entertainer",
         "Manager",
-        "Unwanted Guest",
+        "Unexpected Guest",
         "Owner",
         "Secretary",
         "Accountant",
@@ -100,7 +100,7 @@
       "location": "Crusader Army",
       "roles": [
         "Monk",
-        "Imprisoned Saracen",
+        "Imprisoned Arab",
         "Servant",
         "Bishop",
         "Squire",
@@ -109,23 +109,23 @@
       ]
     },
     {
-      "location": "Day Spa",
+      "location": "Wellness Centre",
       "roles": [
         "Customer",
         "Stylist",
         "Masseuse",
         "Manicurist",
-        "Makeup Artist",
+        "Make-up Artist",
         "Dermatologist",
-        "Beautician"
+        "Cosmetologist"
       ]
     },
     {
-      "location": "Embassy",
+      "location": "Consulate",
       "roles": [
         "Security Guard",
         "Secretary",
-        "Ambassador",
+        "Consul",
         "Government Official",
         "Tourist",
         "Refugee",
@@ -147,21 +147,21 @@
     {
       "location": "Hotel",
       "roles": [
-        "Doorman",
+        "Concierge",
         "Security Guard",
         "Manager",
-        "Housekeeper",
+        "Caretaker",
         "Customer",
-        "Bartender",
-        "Bellman"
+        "Publican",
+        "Porter"
       ]
     },
     {
-      "location": "Military Base",
+      "location": "Army Base",
       "roles": [
         "Deserter",
-        "Colonel",
-        "Medic",
+        "Commander",
+        "Field Doctor",
         "Soldier",
         "Sniper",
         "Officer",
@@ -169,9 +169,9 @@
       ]
     },
     {
-      "location": "Movie Studio",
+      "location": "Film Studio",
       "roles": [
-        "Stuntman",
+        "Stunts-man",
         "Sound Engineer",
         "Cameraman",
         "Director",
@@ -183,19 +183,19 @@
     {
       "location": "Ocean Liner",
       "roles": [
-        "Rich Passenger",
+        "Wealthy Passenger",
         "Cook",
         "Captain",
-        "Bartender",
+        "Barman",
         "Musician",
         "Waiter",
-        "Mechanic"
+        "Serviceman"
       ]
     },
     {
       "location": "Passenger Train",
       "roles": [
-        "Mechanic",
+        "Repairman",
         "Border Patrol",
         "Train Attendant",
         "Passenger",
@@ -208,7 +208,7 @@
       "location": "Pirate Ship",
       "roles": [
         "Cook",
-        "Sailor",
+        "Seaman",
         "Slave",
         "Cannoneer",
         "Bound Prisoner",
@@ -219,7 +219,7 @@
     {
       "location": "Polar Station",
       "roles": [
-        "Medic",
+        "Field Doctor",
         "Geologist",
         "Expedition Leader",
         "Biologist",
@@ -245,7 +245,7 @@
       "roles": [
         "Musician",
         "Customer",
-        "Bouncer",
+        "Muscle",
         "Hostess",
         "Head Chef",
         "Food Critic",
@@ -255,25 +255,25 @@
     {
       "location": "School",
       "roles": [
-        "Gym Teacher",
+        "P.E. Teacher",
         "Student",
-        "Principal",
+        "Headmaster",
         "Security Guard",
-        "Janitor",
-        "Lunch Lady",
-        "Maintenance Man"
+        "Cleaner",
+        "Canteen Lady",
+        "Repairman"
       ]
     },
     {
       "location": "Service Station",
       "roles": [
         "Manager",
-        "Tire Specialist",
+        "Tyre Specialist",
         "Biker",
         "Car Owner",
-        "Car Wash Operator",
+        "Car Wash Assistant",
         "Electrician",
-        "Auto Mechanic"
+        "Car Repairman"
       ]
     },
     {
@@ -281,7 +281,7 @@
       "roles": [
         "Engineer",
         "Alien",
-        "Tourist",
+        "Space Tourist",
         "Pilot",
         "Commander",
         "Scientist",
@@ -295,7 +295,7 @@
         "Commander",
         "Sonar Technician",
         "Electronics Technician",
-        "Sailor",
+        "Seaman",
         "Radioman",
         "Navigator"
       ]
@@ -304,11 +304,11 @@
       "location": "Supermarket",
       "roles": [
         "Customer",
-        "Cashier",
+        "Cash Assistant",
         "Butcher",
-        "Janitor",
+        "Cleaner",
         "Security Guard",
-        "Food Sample Demonstrator",
+        "Food Sample Hostess",
         "Shelf Stocker"
       ]
     },
@@ -319,9 +319,386 @@
         "Professor",
         "Dean",
         "Psychologist",
-        "Maintenance Man",
+        "Repairman",
         "Student",
-        "Janitor"
+        "Cleaner"
+      ]
+    }
+  ],
+  "spyfall2": [
+    {
+      "location": "Funfair",
+      "roles": [
+        "Ride Operator",
+        "Parent",
+        "Food Salesperson",
+        "Cash Assistant",
+        "Happy Child",
+        "Annoying Child",
+        "Teenager",
+        "Cleaner",
+        "Security Guard",
+        "Parent"
+      ]
+    },
+    {
+      "location": "Art Museum",
+      "roles": [
+        "Ticket Salesman",
+        "Student",
+        "Visitor",
+        "Teacher",
+        "Security Guard",
+        "Painter",
+        "Art Collector",
+        "Art Critic",
+        "Photographer",
+        "Tourist"
+      ]
+    },
+    {
+      "location": "Sweets Factory",
+      "roles": [
+        "Madcap Redhead",
+        "Pastry Chef",
+        "Visitor",
+        "Taster",
+        "Truffle Maker",
+        "Taster",
+        "Supply Worker",
+        "Oompa Loompa",
+        "Inspector",
+        "Machine Assistant"
+      ]
+    },
+    {
+      "location": "Cat Show",
+      "roles": [
+        "Judge",
+        "Cat-Handler",
+        "Animal Doctor",
+        "Security Guard",
+        "Cat Trainer",
+        "Crazy Cat Lady",
+        "Animal Lover",
+        "Cat Owner",
+        "Cat",
+        "Cat"
+      ]
+    },
+    {
+      "location": "Cemetery",
+      "roles": [
+        "Priest",
+        "Goth Girl",
+        "Grave Robber",
+        "Poet",
+        "Mourner",
+        "Gate Keeper",
+        "Deceased Person",
+        "Relative",
+        "Florist",
+        "Digger"
+      ]
+    },
+    {
+      "location": "Coal Mine",
+      "roles": [
+        "Safety Inspector",
+        "Miner",
+        "Supervisor",
+        "Garbage Truck Assistant",
+        "Driller",
+        "Coordinator",
+        "Blasting Engineer",
+        "Miner",
+        "Solid Waste Engineer",
+        "Worker"
+      ]
+    },
+    {
+      "location": "Construction Site",
+      "roles": [
+        "Free-Roaming Toddler",
+        "Contractor",
+        "Crane Driver",
+        "Trespasser",
+        "Safety Officer",
+        "Electrician",
+        "Engineer",
+        "Architect",
+        "Tradesman",
+        "Tradesman"
+      ]
+    },
+    {
+      "location": "Gaming Convention",
+      "roles": [
+        "Blogger",
+        "Cosplayer",
+        "Gamer",
+        "Exhibitor",
+        "Collector",
+        "Child",
+        "Security Guard",
+        "Nerd",
+        "Shy Person",
+        "Famous Person"
+      ]
+    },
+    {
+      "location": "Petrol Station",
+      "roles": [
+        "Car Enthusiast",
+        "Service Attendant",
+        "Shopkeep",
+        "Customer",
+        "Car Washer",
+        "Cash Assistant",
+        "Customer",
+        "Climate Change Activist",
+        "Service Attendant",
+        "Manager"
+      ]
+    },
+    {
+      "location": "Harbour Docks",
+      "roles": [
+        "Dock-loader",
+        "Salty Old Pirate",
+        "Captain",
+        "Seaman",
+        "Dock-loader",
+        "Fisherman",
+        "Exporter",
+        "Cargo Supervisor",
+        "Cargo Inspector",
+        "Smuggler"
+      ]
+    },
+    {
+      "location": "Ice Hockey Stadium",
+      "roles": [
+        "Hockey Fan",
+        "Doctor",
+        "Hockey Player",
+        "Food Salesperson",
+        "Security Guard",
+        "Goaltender",
+        "Coach",
+        "Referee",
+        "Spectator",
+        "Hockey Player"
+      ]
+    },
+    {
+      "location": "Gaol",
+      "roles": [
+        "Wrongly Accused Man",
+        "CCTV Operator",
+        "Guard",
+        "Visitor",
+        "Lawyer",
+        "Cleaner",
+        "Warden",
+        "Criminal",
+        "Prison Officer",
+        "Maniac"
+      ]
+    },
+    {
+      "location": "Jazz Club",
+      "roles": [
+        "Muscle",
+        "Drummer",
+        "Pianist",
+        "Saxophonist",
+        "Singer",
+        "Jazz Fanatic",
+        "Dancer",
+        "Barman",
+        "VIP",
+        "Waiter"
+      ]
+    },
+    {
+      "location": "Library",
+      "roles": [
+        "Elderly Man",
+        "Journalist",
+        "Author",
+        "Volunteer",
+        "Know-It-All",
+        "Student",
+        "Librarian",
+        "Loudmouth",
+        "Book Fanatic",
+        "Nerd"
+      ]
+    },
+    {
+      "location": "Night Bar",
+      "roles": [
+        "Regular Patron",
+        "Publican",
+        "Security Guard",
+        "Dancer",
+        "Courtesan",
+        "Party Girl",
+        "Model",
+        "Buff Bloke",
+        "Drunkard",
+        "Shy Person"
+      ]
+    },
+    {
+      "location": "Race Track",
+      "roles": [
+        "Team Owner",
+        "Racer",
+        "Engineer",
+        "Spectator",
+        "Referee",
+        "Repairman",
+        "Food Salesperson",
+        "Commentator",
+        "Bookmaker",
+        "Spectator"
+      ]
+    },
+    {
+      "location": "Retirement Home",
+      "roles": [
+        "Relative",
+        "Cribbage Player",
+        "Elderly Person",
+        "Nurse",
+        "Cleaner",
+        "Cook",
+        "Blind Person",
+        "Psychologist",
+        "Elderly Person",
+        "Nurse"
+      ]
+    },
+    {
+      "location": "Rock Concert",
+      "roles": [
+        "Dancer",
+        "Singer",
+        "Fan",
+        "Guitarist",
+        "Drummer",
+        "Roadie",
+        "Stage Diver",
+        "Security Guard",
+        "Bassist",
+        "Technical Support"
+      ]
+    },
+    {
+      "location": "Sightseeing Bus",
+      "roles": [
+        "Elderly Man",
+        "Lone Tourist",
+        "Driver",
+        "Annoying Child",
+        "Tourist",
+        "Tour Guide",
+        "Photographer",
+        "Tourist",
+        "Lost Person",
+        "Tourist"
+      ]
+    },
+    {
+      "location": "Stadium",
+      "roles": [
+        "Doctor",
+        "Hammer Thrower",
+        "Athlete",
+        "Commentator",
+        "Spectator",
+        "Security Guard",
+        "Referee",
+        "Food Salesperson",
+        "High Jumper",
+        "Sprinter"
+      ]
+    },
+    {
+      "location": "Underground",
+      "roles": [
+        "Tourist",
+        "Train Driver",
+        "Ticket Inspector",
+        "Pregnant Lady",
+        "Pickpocket",
+        "Cleaner",
+        "Businessman",
+        "Ticket Salesman",
+        "Elderly Lady",
+        "Blind Man"
+      ]
+    },
+    {
+      "location": "The U.N.",
+      "roles": [
+        "Diplomat",
+        "Interpreter",
+        "Blowhard",
+        "Tourist",
+        "Napping Delegate",
+        "Journalist",
+        "Secretary of State",
+        "Speaker",
+        "Secretary-General",
+        "Lobbyist"
+      ]
+    },
+    {
+      "location": "Vineyard",
+      "roles": [
+        "Gardener",
+        "Gourmet Guide",
+        "Winemaker",
+        "Exporter",
+        "Butler",
+        "Wine Taster",
+        "Sommelier",
+        "Wealthy Lord",
+        "Vineyard Manager",
+        "Enologist"
+      ]
+    },
+    {
+      "location": "Wedding",
+      "roles": [
+        "Ring Bearer",
+        "Groom",
+        "Bride",
+        "Officiant",
+        "Photographer",
+        "Bridesmaid",
+        "Father of the Bride",
+        "Wedding Crasher",
+        "Best Man",
+        "Relative"
+      ]
+    },
+    {
+      "location": "Zoo",
+      "roles": [
+        "Zookeeper",
+        "Visitor",
+        "Photographer",
+        "Child",
+        "Animal Doctor",
+        "Tourist",
+        "Food Salesperson",
+        "Cash Assistant",
+        "Zookeeper",
+        "Researcher"
       ]
     }
   ]

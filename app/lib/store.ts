@@ -15,7 +15,7 @@ export interface Player {
 export type GameStatus = 'LOBBY' | 'IN_PROGRESS' | 'FINISHED';
 
 export interface GameSettings {
-  useSpyfall2: boolean;
+  locationSets: string[];
   timerEnabled: boolean;
   timerDuration: number; // in minutes
   spyCount: number;
@@ -64,7 +64,7 @@ export const store = {
       status: 'LOBBY',
       isPaused: false,
       settings: {
-        useSpyfall2: false,
+        locationSets: ['spyfall1'],
         timerEnabled: false,
         timerDuration: 8,
         spyCount: 1,
@@ -132,7 +132,15 @@ export const store = {
     if (!lobby) return;
 
     // Select random location
-    const locations = gameData.spyfall1; // Extend logic for Spyfall 2 later if needed
+    const validSets = lobby.settings.locationSets.filter(set => set in gameData);
+    const typedGameData = gameData as Record<string, { location: string; roles: string[] }[]>;
+    const locations = validSets.flatMap(set => typedGameData[set]);
+    
+    if (locations.length === 0) {
+        // Fallback to spyfall1 if something goes wrong
+        locations.push(...gameData.spyfall1);
+    }
+
     const randomLocIndex = Math.floor(Math.random() * locations.length);
     const selectedLocation = locations[randomLocIndex];
 

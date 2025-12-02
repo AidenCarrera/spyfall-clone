@@ -417,6 +417,62 @@ export default function LobbyPage({
                 )}
               </div>
             </div>
+            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-700/50">
+              <label className="text-slate-300">Location Sets</label>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.keys(gameData).map((setKey) => {
+                  const isSelected = (
+                    lobby.locationSets || ["spyfall1"]
+                  ).includes(setKey);
+                  return (
+                    <button
+                      key={setKey}
+                      disabled={!isHost}
+                      onClick={async () => {
+                        if (!isHost) return;
+                        const currentSets = lobby.locationSets || ["spyfall1"];
+                        let newSets: string[];
+
+                        if (isSelected) {
+                          // Prevent deselecting the last set
+                          if (currentSets.length === 1) return;
+                          newSets = currentSets.filter((s) => s !== setKey);
+                        } else {
+                          newSets = [...currentSets, setKey];
+                        }
+
+                        // Optimistic update
+                        await mutate(
+                          {
+                            lobby: { ...lobby, locationSets: newSets },
+                          },
+                          { revalidate: false }
+                        );
+
+                        await updateSettingsAction(code, {
+                          locationSets: newSets,
+                        });
+                        mutate();
+                      }}
+                      className={`flex items-center justify-between p-2 rounded transition-colors border ${
+                        isSelected
+                          ? "bg-blue-900/30 border-blue-500/50 text-blue-200"
+                          : "bg-slate-800 border-transparent text-slate-400 hover:bg-slate-700"
+                      } ${
+                        !isHost ? "cursor-default opacity-80" : "cursor-pointer"
+                      }`}
+                    >
+                      <span className="capitalize">
+                        {setKey.replace(/([A-Z])/g, " $1").trim()}
+                      </span>
+                      {isSelected && (
+                        <Check className="w-4 h-4 text-blue-400" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </Card>
 
           <Card title={`Players (${lobby.players.length})`}>
@@ -621,11 +677,17 @@ export default function LobbyPage({
           <h3 className="text-lg font-semibold text-slate-300 px-1">
             Locations Reference
           </h3>
-          <div className="grid grid-cols-2 gap-2">
-            {gameData.spyfall1.map((loc) => (
-              <div
-                key={loc.location}
-                className={`p-2 rounded text-sm text-center transition-colors cursor-pointer select-none
+          <div className="grid grid-cols-2 gap-1">
+            {Object.entries(gameData)
+              .filter(([key]) =>
+                (lobby.locationSets || ["spyfall1"]).includes(key)
+              )
+              .flatMap(([, locations]) => locations)
+              .sort((a, b) => a.location.localeCompare(b.location))
+              .map((loc) => (
+                <div
+                  key={loc.location}
+                  className={`p-2 rounded text-sm text-center transition-colors cursor-pointer select-none
                                 ${
                                   lobby.location === loc.location &&
                                   isRevealed &&
@@ -633,14 +695,16 @@ export default function LobbyPage({
                                     ? "bg-blue-900/30 text-blue-200 border border-blue-500/30"
                                     : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                                 }`}
-                onClick={(e) => {
-                  // Simple toggle for crossing off
-                  e.currentTarget.classList.toggle("line-through");
-                }}
-              >
-                {loc.location}
-              </div>
-            ))}
+                  onClick={(e) => {
+                    // Simple toggle for crossing off
+                    e.currentTarget.classList.toggle("line-through");
+                    e.currentTarget.classList.toggle("opacity-50");
+                    e.currentTarget.classList.toggle("bg-black");
+                  }}
+                >
+                  {loc.location}
+                </div>
+              ))}
           </div>
         </div>
 
