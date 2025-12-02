@@ -12,7 +12,7 @@ export interface Player {
   isSpy?: boolean;
 }
 
-export type GameStatus = 'LOBBY' | 'IN_PROGRESS' | 'FINISHED';
+export type GameStatus = 'LOBBY' | 'IN_PROGRESS';
 
 export interface GameSettings {
   selectedLocations: string[];
@@ -104,7 +104,11 @@ export const store = {
   },
 
   getLobby: async (code: string): Promise<Lobby | undefined> => {
-    const lobby = await redis.get<Lobby>(`lobby:${code.toUpperCase()}`);
+    // Use getex to refresh TTL on every read (including polling)
+    // This ensures active lobbies don't expire while players are just viewing/polling
+    const lobby = await redis.getex<Lobby>(`lobby:${code.toUpperCase()}`, {
+      ex: LOBBY_TTL,
+    });
     return lobby || undefined;
   },
 
@@ -204,24 +208,6 @@ export const store = {
       lobby.timerStartTime = undefined;
       lobby.isPaused = true;
     }
-
-    lobby.lastActivity = Date.now();
-    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
-  },
-
-  endGame: async (code: string) => {
-    const lobby = await store.getLobby(code);
-    if (!lobby) return;
-
-    lobby.status = 'FINISHED';
-    lobby.location = undefined;
-    lobby.timerStartTime = undefined;
-    lobby.timerAccumulated = undefined;
-    lobby.isPaused = false;
-    lobby.players.forEach(p => {
-      p.role = undefined;
-      p.isSpy = undefined;
-    });
 
     lobby.lastActivity = Date.now();
     await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });

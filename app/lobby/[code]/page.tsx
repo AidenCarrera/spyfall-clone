@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef } from "react";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -37,11 +37,15 @@ export default function LobbyPage({
   const [isEditLocationsOpen, setIsEditLocationsOpen] = useState(false);
 
   // Timer state
-  const [timeLeft, setTimeLeft] = useState<string>("");
-  const [isTimeUp, setIsTimeUp] = useState(false);
-  const [timeOffset, setTimeOffset] = useState(0);
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
+
+  // Reference to store the time difference between client and server
+  // Ensures timer accuracy regardless of client system clock deviations
+  const serverOffsetRef = useRef<number>(0);
+  const isOffsetSet = useRef(false);
 
   // SWR Data Fetching
+  // Configured with a 2-second refresh interval to optimize Redis command usage
   const {
     data: lobbyData,
     error: lobbyError,
@@ -50,9 +54,9 @@ export default function LobbyPage({
     playerId ? ["lobby", code, playerId] : null,
     ([, c, pid]) => getLobbyStateAction(c, pid),
     {
-      refreshInterval: 1000,
+      refreshInterval: 2000,
       revalidateOnFocus: true,
-      dedupingInterval: 500,
+      dedupingInterval: 1000,
     }
   );
 
@@ -68,6 +72,7 @@ export default function LobbyPage({
       return;
     }
     if (storedPid !== playerId) {
+      // Sync state with session storage
       // eslint-disable-next-line
       setPlayerId(storedPid);
     }
@@ -77,61 +82,95 @@ export default function LobbyPage({
   useEffect(() => {
     if (lobby) {
       if (lobby.status === "LOBBY" && isRevealed) {
+        // Reset revealed state when back in lobby
         // eslint-disable-next-line
         setIsRevealed(false);
       }
-
-      if (lobby.status !== "IN_PROGRESS" || !lobby.timerDuration) {
-        if (timeLeft !== "") setTimeLeft("");
-        if (isTimeUp) setIsTimeUp(false);
-      }
-
-      // Calculate time offset: serverTime - clientTime
-      const offset = lobby.serverTime - Date.now();
-      // Only update if offset changed significantly (e.g. > 100ms) to avoid jitter
-      if (Math.abs(offset - timeOffset) > 100) {
-        setTimeOffset(offset);
-      }
     }
-  }, [lobby, timeOffset, isRevealed, timeLeft, isTimeUp]);
+  }, [lobby, isRevealed]);
 
-  // Timer logic
+  // Synchronize Client-Server Clock Offset
+  useEffect(() => {
+    if (!lobby?.serverTime) return;
+
+    // Calculate offset: Server Time - Client Time
+    const now = Date.now();
+    const newOffset = lobby.serverTime - now;
+
+    // Update offset only on initialization or if significant drift (>1000ms) is detected.
+    // This threshold prevents minor network jitter from causing unnecessary updates.
+    if (
+      !isOffsetSet.current ||
+      Math.abs(serverOffsetRef.current - newOffset) > 1000
+    ) {
+      serverOffsetRef.current = newOffset;
+      isOffsetSet.current = true;
+    }
+  }, [lobby?.serverTime]);
+
+  // High-Frequency Timer Update
+  // Updates the UI every 100ms for smooth rendering without additional data fetching.
+  // Time is calculated using absolute timestamps: (Start + Duration) - (Now + Offset)
   useEffect(() => {
     if (lobby?.status !== "IN_PROGRESS" || !lobby?.timerDuration) {
+      // eslint-disable-next-line
+      setSecondsRemaining(null);
       return;
     }
 
-    const updateTimer = () => {
-      const totalDurationMs = lobby.timerDuration! * 60 * 1000;
-      let elapsed = lobby.timerAccumulated || 0;
-
-      if (!lobby.isPaused && lobby.timerStartTime) {
-        // Use server-aligned time
-        const now = Date.now() + timeOffset;
-        elapsed += now - lobby.timerStartTime;
+    const tick = () => {
+      // Paused State: Display static remaining time based on accumulated duration
+      if (lobby.isPaused) {
+        const totalDurationMs = lobby.timerDuration! * 60 * 1000;
+        const elapsedMs = lobby.timerAccumulated || 0;
+        const remaining = Math.max(
+          0,
+          Math.ceil((totalDurationMs - elapsedMs) / 1000)
+        );
+        setSecondsRemaining(remaining);
+        return;
       }
 
-      const remaining = totalDurationMs - elapsed;
+      // Active State: Calculate remaining time using synchronized server time
+      if (lobby.timerStartTime) {
+        const now = Date.now();
+        const adjustedNow = now + serverOffsetRef.current;
 
-      if (remaining <= 0) {
-        setTimeLeft("00:00");
-        setIsTimeUp(true);
-      } else {
-        const minutes = Math.floor(remaining / 60000);
-        const seconds = Math.floor((remaining % 60000) / 1000);
-        setTimeLeft(
-          `${minutes.toString().padStart(2, "0")}:${seconds
-            .toString()
-            .padStart(2, "0")}`
-        );
-        setIsTimeUp(false);
+        // Calculate elapsed time: (Current - Start) + Accumulated
+        const currentSegment = adjustedNow - lobby.timerStartTime;
+        const totalElapsed = currentSegment + (lobby.timerAccumulated || 0);
+
+        const totalDurationMs = lobby.timerDuration! * 60 * 1000;
+        const remainingMs = totalDurationMs - totalElapsed;
+
+        setSecondsRemaining(Math.max(0, Math.ceil(remainingMs / 1000)));
       }
     };
 
-    updateTimer(); // Initial update
-    const timerInterval = setInterval(updateTimer, 1000);
-    return () => clearInterval(timerInterval);
-  }, [lobby, timeOffset]);
+    // Initial update
+    tick();
+
+    // Update UI every 100ms to prevent visual skipping of seconds
+    const interval = setInterval(tick, 100);
+    return () => clearInterval(interval);
+  }, [
+    lobby?.status,
+    lobby?.timerDuration,
+    lobby?.timerStartTime,
+    lobby?.isPaused,
+    lobby?.timerAccumulated,
+  ]);
+
+  // Derived display state
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const timeLeft =
+    secondsRemaining !== null ? formatTime(secondsRemaining) : "";
+  const isTimeUp = secondsRemaining !== null && secondsRemaining === 0;
 
   const handleStartGame = async () => {
     if (!lobby) return;
@@ -169,7 +208,7 @@ export default function LobbyPage({
     if (!lobby) return;
 
     // Optimistic update
-    const now = Date.now() + timeOffset;
+    const now = Date.now();
     const newIsPaused = !lobby.isPaused;
 
     const updatedLobby = { ...lobby, isPaused: newIsPaused };
