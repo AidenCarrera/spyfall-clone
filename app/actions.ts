@@ -1,7 +1,9 @@
 'use server';
 
-import { store, Lobby, Player } from './lib/store';
+import { store, Player } from './lib/store';
+import { checkRateLimit } from './lib/ratelimit';
 import { z } from 'zod';
+import { headers } from 'next/headers';
 
 const CreateLobbySchema = z.object({
     hostName: z.string().trim().min(1, "Host name is required").max(20, "Host name must be 20 characters or less")
@@ -14,6 +16,12 @@ const JoinLobbySchema = z.object({
 
 export async function createLobbyAction(hostName: string) {
     try {
+        const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+        const isAllowed = await checkRateLimit(ip, 'create');
+        if (!isAllowed) {
+            return { error: "Too many requests. Please try again later." };
+        }
+
         const result = CreateLobbySchema.safeParse({ hostName });
         if (!result.success) {
             return { error: result.error.issues[0].message };
@@ -30,6 +38,12 @@ export async function createLobbyAction(hostName: string) {
 
 export async function joinLobbyAction(code: string, playerName: string) {
     try {
+        const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+        const isAllowed = await checkRateLimit(ip, 'join');
+        if (!isAllowed) {
+            return { error: "Too many requests. Please try again later." };
+        }
+
         const result = JoinLobbySchema.safeParse({ code, playerName });
         if (!result.success) {
             return { error: result.error.issues[0].message };
