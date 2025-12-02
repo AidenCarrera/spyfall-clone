@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Check, Copy } from "lucide-react";
 import {
   getLobbyStateAction,
   startGameAction,
@@ -31,6 +32,7 @@ export default function LobbyPage({
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Timer state
   const [timeLeft, setTimeLeft] = useState<string>("");
@@ -260,9 +262,34 @@ export default function LobbyPage({
             <p className="text-slate-400 text-sm uppercase tracking-wider">
               Access Code
             </p>
-            <p className="text-5xl font-mono font-bold text-blue-400 tracking-widest">
-              {code}
-            </p>
+            <div className="flex items-center justify-center">
+              <div className="relative">
+                <p className="text-5xl font-mono font-bold text-blue-400 tracking-widest">
+                  {code}
+                </p>
+                <div className="absolute left-full top-1/2 -translate-y-8/19 ml-4">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(code);
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 2000);
+                      } catch (err) {
+                        console.error("Failed to copy:", err);
+                      }
+                    }}
+                    className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
+                    title="Copy Access Code"
+                  >
+                    {isCopied ? (
+                      <Check className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <Copy className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </Card>
 
           <Card title="Game Settings">
