@@ -126,6 +126,7 @@ export interface ClientLobbyState {
     timerDuration?: number;
     spyCount?: number;
     isSpy?: boolean;
+    serverTime: number;
 }
 
 export async function getLobbyStateAction(code: string, playerId: string): Promise<{ lobby?: ClientLobbyState; error?: string }> {
@@ -147,6 +148,7 @@ export async function getLobbyStateAction(code: string, playerId: string): Promi
             isPaused: lobby.isPaused,
             timerDuration: lobby.settings.timerDuration,
             spyCount: lobby.settings.spyCount,
+            serverTime: Date.now(),
         };
 
         if (lobby.status === 'IN_PROGRESS') {

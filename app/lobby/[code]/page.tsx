@@ -9,7 +9,7 @@ import { Card } from '../../components/Card';
 import { HelpModal } from '../../components/HelpModal';
 import gameData from '../../lib/game-data.json';
 
-const POLLING_INTERVAL = 2000;
+const POLLING_INTERVAL = 1000;
 
 export default function LobbyPage({ params }: { params: Promise<{ code: string }> }) {
     const resolvedParams = use(params);
@@ -26,6 +26,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     // Timer state
     const [timeLeft, setTimeLeft] = useState<string>('');
     const [isTimeUp, setIsTimeUp] = useState(false);
+    const [timeOffset, setTimeOffset] = useState(0);
 
     // Initial setup and polling
     useEffect(() => {
@@ -45,6 +46,10 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
                 }
             } else {
                 setLobby(result.lobby!);
+                // Calculate time offset: serverTime - clientTime
+                // We use the time when we receive the response as an approximation of "now"
+                const offset = result.lobby!.serverTime - Date.now();
+                setTimeOffset(offset);
             }
             setLoading(false);
         };
@@ -73,7 +78,9 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
             let elapsed = lobby.timerAccumulated || 0;
 
             if (!lobby.isPaused && lobby.timerStartTime) {
-                elapsed += (Date.now() - lobby.timerStartTime);
+                // Use server-aligned time
+                const now = Date.now() + timeOffset;
+                elapsed += (now - lobby.timerStartTime);
             }
 
             const remaining = totalDurationMs - elapsed;
@@ -122,7 +129,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
         if (!lobby) return;
 
         // Optimistic update
-        const now = Date.now();
+        const now = Date.now() + timeOffset;
         const newIsPaused = !lobby.isPaused;
 
         const updatedLobby = { ...lobby, isPaused: newIsPaused };
