@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Button } from './components/Button';
-import { Card } from './components/Card';
-import { HelpModal } from './components/HelpModal';
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "./components/Button";
+import { Card } from "./components/Card";
+import { HelpModal } from "./components/HelpModal";
 
 export default function Home() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-slate-900 to-slate-950">
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-linear-to-b from-slate-900 to-slate-950">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter">
+          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-500 tracking-tighter">
             SPYFALL
           </h1>
           <p className="text-slate-400 text-lg">
