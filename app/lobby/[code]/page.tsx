@@ -68,15 +68,14 @@ export default function LobbyPage({
   }, [code, router, playerId]);
 
   // Handle side effects of lobby state changes
-  useEffect(() => {
-    if (lobby) {
-      if (lobby.status === "LOBBY" && isRevealed) {
-        // Reset revealed state when back in lobby
-        // eslint-disable-next-line
-        setIsRevealed(false);
-      }
+  const [prevStatus, setPrevStatus] = useState(lobby?.status);
+
+  if (lobby && prevStatus !== lobby.status) {
+    setPrevStatus(lobby.status);
+    if (lobby.status === "LOBBY" && isRevealed) {
+      setIsRevealed(false);
     }
-  }, [lobby, isRevealed]);
+  }
 
   // Synchronize Client-Server Clock Offset
   useEffect(() => {
@@ -102,8 +101,6 @@ export default function LobbyPage({
   // Time is calculated using absolute timestamps: (Start + Duration) - (Now + Offset)
   useEffect(() => {
     if (lobby?.status !== "IN_PROGRESS" || !lobby?.timerDuration) {
-      // eslint-disable-next-line
-      setSecondsRemaining(null);
       return;
     }
 
@@ -157,9 +154,13 @@ export default function LobbyPage({
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
+  const isGameInProgress = lobby?.status === "IN_PROGRESS";
   const timeLeft =
-    secondsRemaining !== null ? formatTime(secondsRemaining) : "";
-  const isTimeUp = secondsRemaining !== null && secondsRemaining === 0;
+    isGameInProgress && secondsRemaining !== null
+      ? formatTime(secondsRemaining)
+      : "";
+  const isTimeUp =
+    isGameInProgress && secondsRemaining !== null && secondsRemaining === 0;
 
   const handleStartGame = async () => {
     if (!lobby) return;

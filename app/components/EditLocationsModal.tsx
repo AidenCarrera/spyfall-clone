@@ -53,7 +53,7 @@ export function EditLocationsModal({
   };
 
   const handleSelectAllSet = (setKey: string) => {
-    const setLocations = gameData[setKey].map((l) => l.location);
+    const setLocations = gameData[setKey]?.map((l) => l.location) || [];
     setLocalSelected((prev) => {
       const newSet = new Set(prev);
       setLocations.forEach((l) => newSet.add(l));
@@ -62,7 +62,7 @@ export function EditLocationsModal({
   };
 
   const handleClearSet = (setKey: string) => {
-    const setLocations = gameData[setKey].map((l) => l.location);
+    const setLocations = gameData[setKey]?.map((l) => l.location) || [];
     setLocalSelected((prev) => prev.filter((l) => !setLocations.includes(l)));
   };
 

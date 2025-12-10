@@ -123,7 +123,7 @@ export const store = {
       await redis.del(`lobby:${code}`);
     } else {
       const hostLeft = !lobby.players.some(p => p.isHost);
-      if (hostLeft) {
+      if (hostLeft && lobby.players[0]) {
         lobby.players[0].isHost = true;
       }
       lobby.lastActivity = Date.now();

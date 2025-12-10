@@ -24,11 +24,14 @@ export async function createLobbyAction(hostName: string) {
 
         const result = CreateLobbySchema.safeParse({ hostName });
         if (!result.success) {
-            return { error: result.error.issues[0].message };
+            return { error: result.error.issues[0]?.message || "Invalid input" };
         }
 
         const lobby = await store.createLobby(result.data.hostName);
         // Return the host's player ID (it's the first player)
+        if (!lobby.players[0]) {
+            throw new Error('Host player creation failed');
+        }
         return { code: lobby.code, playerId: lobby.players[0].id };
     } catch (error) {
         console.error('createLobbyAction error:', error);
@@ -46,7 +49,7 @@ export async function joinLobbyAction(code: string, playerName: string) {
 
         const result = JoinLobbySchema.safeParse({ code, playerName });
         if (!result.success) {
-            return { error: result.error.issues[0].message };
+            return { error: result.error.issues[0]?.message || "Invalid input" };
         }
 
         const joinResult = await store.joinLobby(result.data.code, result.data.playerName);
