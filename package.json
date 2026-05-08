@@ -9,24 +9,24 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@upstash/ratelimit": "^2.0.7",
-    "@upstash/redis": "^1.35.7",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "lucide-react": "^0.559.0",
-    "next": "16.0.8",
+    "next": "^16.2.6",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "swr": "^2.3.7",
-    "zod": "^4.1.13"
+    "swr": "^2.4.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.17",
-    "@types/node": "^25.0.0",
-    "@types/react": "^19.2.7",
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^25.6.2",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "baseline-browser-mapping": "^2.9.6",
-    "eslint": "^9.39.1",
+    "baseline-browser-mapping": "^2.10.27",
+    "eslint": "^9.39.4",
     "eslint-config-next": "16.0.8",
-    "tailwindcss": "^4.1.17",
+    "tailwindcss": "^4.2.4",
     "typescript": "^5.9.3"
   }
 }
