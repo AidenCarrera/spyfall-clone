@@ -1,12 +1,12 @@
 "use client";
 
 import { KeyedMutator } from "swr";
-import { Card } from "@/app/components/Card";
+import { Card } from "@/src/components/Card";
 import {
   ClientLobbyState,
   kickPlayerAction,
   promoteHostAction,
-} from "@/app/actions";
+} from "@/src/app/actions";
 
 interface PlayerListProps {
   code: string;

@@ -4,11 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import { Settings } from "lucide-react";
 import { KeyedMutator } from "swr";
-import { Card } from "@/app/components/Card";
-import { Button } from "@/app/components/Button";
-import { EditLocationsModal } from "@/app/components/EditLocationsModal";
-import { ClientLobbyState, updateSettingsAction } from "@/app/actions";
-import gameData from "@/app/lib/game-data.json";
+import { Card } from "@/src/components/Card";
+import { Button } from "@/src/components/Button";
+import { EditLocationsModal } from "@/src/components/EditLocationsModal";
+import { ClientLobbyState, updateSettingsAction } from "@/src/app/actions";
+import gameData from "@/src/lib/game-data.json";
 
 interface GameSettingsProps {
   code: string;

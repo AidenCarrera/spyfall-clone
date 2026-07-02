@@ -9,11 +9,11 @@ import {
   startGameAction,
   resetGameAction,
   togglePauseAction,
-} from "@/app/actions";
-import { Card } from "@/app/components/Card";
-import { Button } from "@/app/components/Button";
-import { LobbyView } from "@/app/components/lobby/LobbyView";
-import { GameView } from "@/app/components/game/GameView";
+} from "@/src/app/actions";
+import { Card } from "@/src/components/Card";
+import { Button } from "@/src/components/Button";
+import { LobbyView } from "@/src/components/lobby/LobbyView";
+import { GameView } from "@/src/components/game/GameView";
 
 export default function LobbyPage({
   params,

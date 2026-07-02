@@ -3,9 +3,9 @@
 import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { joinLobbyAction } from "../actions";
-import { Button } from "../components/Button";
-import { Input } from "../components/Input";
-import { Card } from "../components/Card";
+import { Button } from "@/src/components/Button";
+import { Input } from "@/src/components/Input";
+import { Card } from "@/src/components/Card";
 import Link from "next/link";
 
 function JoinLobbyContent() {

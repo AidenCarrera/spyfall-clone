@@ -1,7 +1,7 @@
 "use client";
 
-import { ClientLobbyState } from "@/app/actions";
-import gameData from "@/app/lib/game-data.json";
+import { ClientLobbyState } from "@/src/app/actions";
+import gameData from "@/src/lib/game-data.json";
 
 interface LocationsReferenceProps {
   lobby: ClientLobbyState;

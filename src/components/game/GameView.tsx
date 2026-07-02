@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/app/components/Button";
-import { HelpModal } from "@/app/components/HelpModal";
+import { Button } from "@/src/components/Button";
+import { HelpModal } from "@/src/components/HelpModal";
 import { RoleCard } from "./RoleCard";
 import { LocationsReference } from "./LocationsReference";
-import { ClientLobbyState } from "@/app/actions";
+import { ClientLobbyState } from "@/src/app/actions";
 
 interface GameViewProps {
   lobby: ClientLobbyState;

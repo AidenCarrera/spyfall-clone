@@ -1,7 +1,7 @@
 'use server';
 
-import { store, Player } from './lib/store';
-import { checkRateLimit } from './lib/ratelimit';
+import { store, Player } from '@/src/lib/store';
+import { checkRateLimit } from '@/src/lib/ratelimit';
 import { z } from 'zod';
 import { headers } from 'next/headers';
 

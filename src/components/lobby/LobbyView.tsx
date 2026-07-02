@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyedMutator } from "swr";
-import { Button } from "@/app/components/Button";
-import { HelpModal } from "@/app/components/HelpModal";
+import { Button } from "@/src/components/Button";
+import { HelpModal } from "@/src/components/HelpModal";
 import { AccessCode } from "./AccessCode";
 import { GameSettings } from "./GameSettings";
 import { PlayerList } from "./PlayerList";
-import { ClientLobbyState } from "@/app/actions";
+import { ClientLobbyState } from "@/src/app/actions";
 
 interface LobbyViewProps {
   code: string;
