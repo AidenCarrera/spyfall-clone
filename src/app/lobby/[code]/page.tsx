@@ -46,7 +46,7 @@ export default function LobbyPage({
       refreshInterval: 2000,
       revalidateOnFocus: true,
       dedupingInterval: 1000,
-    }
+    },
   );
 
   const lobby = lobbyData?.lobby;
@@ -111,7 +111,7 @@ export default function LobbyPage({
         const elapsedMs = lobby.timerAccumulated || 0;
         const remaining = Math.max(
           0,
-          Math.ceil((totalDurationMs - elapsedMs) / 1000)
+          Math.ceil((totalDurationMs - elapsedMs) / 1000),
         );
         setSecondsRemaining(remaining);
         return;
@@ -167,7 +167,7 @@ export default function LobbyPage({
     if (lobby.players.length === 3 && (lobby.spyCount || 1) === 2) {
       if (
         !confirm(
-          "Starting with 2 spies and only 3 players is not recommended. Are you sure you want to proceed?"
+          "Starting with 2 spies and only 3 players is not recommended. Are you sure you want to proceed?",
         )
       )
         return;
@@ -232,11 +232,29 @@ export default function LobbyPage({
   }
 
   if (error) {
+    const isKicked = error === "Player not found in lobby";
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-        <Card title="Error">
-          <p className="text-red-400 mb-4">{error}</p>
-          <Button onClick={() => router.push("/")}>Go Home</Button>
+        <Card title={isKicked ? "Kicked" : "Error"}>
+          <div className="flex flex-col items-center text-center space-y-4">
+            {isKicked ? (
+              <p className="text-slate-300">
+                You have been kicked from the lobby by the host.
+              </p>
+            ) : (
+              <p className="text-red-400">{error}</p>
+            )}
+            <Button
+              onClick={() => {
+                localStorage.removeItem(`spyfall_pid_${code}`);
+                router.push("/");
+              }}
+              className="w-full"
+            >
+              Go Home
+            </Button>
+          </div>
         </Card>
       </div>
     );
