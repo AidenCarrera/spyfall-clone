@@ -1,5 +1,5 @@
-import { redis } from './redis';
-import gameData from './game-data.json';
+import { redis } from "./redis";
+import gameData from "./game-data.json";
 
 export type Role = string;
 export type Location = string;
@@ -12,7 +12,7 @@ export interface Player {
   isSpy?: boolean;
 }
 
-export type GameStatus = 'LOBBY' | 'IN_PROGRESS';
+export type GameStatus = "LOBBY" | "IN_PROGRESS";
 
 export interface GameSettings {
   selectedLocations: string[];
@@ -26,16 +26,15 @@ export interface Lobby {
   players: Player[];
   status: GameStatus;
   location?: string;
-  timerStartTime?: number; // When the current running segment started
-  timerAccumulated?: number; // Time elapsed in previous segments
+  timerStartTime?: number;
+  timerAccumulated?: number;
   isPaused: boolean;
   settings: GameSettings;
 }
 
-// Helper to generate a random code
 function generateCode(length: number = 6): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -50,9 +49,36 @@ const saveLobby = async (code: string, lobby: Lobby) => {
   await redis.set(getLobbyKey(code), lobby, { ex: LOBBY_TTL });
 };
 
+export type UpdateResult =
+  | { success: false; reason: "not_found" }
+  | { success: false; reason: "rejected" }
+  | { success: true; lobby: Lobby };
+
+const updateLobby = async (
+  code: string,
+  updater: (lobby: Lobby) => void | boolean | Promise<void | boolean>,
+): Promise<UpdateResult> => {
+  const lobby = await store.getLobby(code);
+  if (!lobby) return { success: false, reason: "not_found" };
+
+  const result = await updater(lobby);
+  if (result === false) return { success: false, reason: "rejected" };
+
+  if (lobby.players.length === 0) {
+    await redis.del(getLobbyKey(code));
+  } else {
+    await saveLobby(code, lobby);
+  }
+
+  return { success: true, lobby };
+};
+
 export interface Store {
   createLobby: (hostName: string) => Promise<Lobby>;
-  joinLobby: (code: string, playerName: string) => Promise<{ lobby?: Lobby; error?: string; playerId?: string }>;
+  joinLobby: (
+    code: string,
+    playerName: string,
+  ) => Promise<{ lobby?: Lobby; error?: string; playerId?: string }>;
   getLobby: (code: string) => Promise<Lobby | undefined>;
   leaveLobby: (code: string, playerId: string) => Promise<void>;
   startGame: (code: string) => Promise<void>;
@@ -60,7 +86,10 @@ export interface Store {
   resetGame: (code: string) => Promise<void>;
   promoteHost: (code: string, newHostId: string) => Promise<void>;
   kickPlayer: (code: string, playerId: string) => Promise<void>;
-  updateSettings: (code: string, settings: Partial<GameSettings>) => Promise<void>;
+  updateSettings: (
+    code: string,
+    settings: Partial<GameSettings>,
+  ) => Promise<void>;
 }
 
 export const store: Store = {
@@ -79,7 +108,7 @@ export const store: Store = {
     const lobby: Lobby = {
       code,
       players: [host],
-      status: 'LOBBY',
+      status: "LOBBY",
       isPaused: false,
       settings: {
         selectedLocations: gameData.spyfall1.map((l) => l.location),
@@ -93,18 +122,23 @@ export const store: Store = {
     return lobby;
   },
 
-  joinLobby: async (code: string, playerName: string): Promise<{ lobby?: Lobby; error?: string; playerId?: string }> => {
+  joinLobby: async (
+    code: string,
+    playerName: string,
+  ): Promise<{ lobby?: Lobby; error?: string; playerId?: string }> => {
     const lobby = await store.getLobby(code);
-    if (!lobby) {
-      return { error: 'Lobby not found' };
+    if (!lobby) return { error: "Lobby not found" };
+
+    if (lobby.status !== "LOBBY") {
+      return { error: "Game already in progress" };
     }
 
-    if (lobby.status !== 'LOBBY') {
-      return { error: 'Game already in progress' };
-    }
-
-    if (lobby.players.some((p) => p.name.toLowerCase() === playerName.toLowerCase())) {
-      return { error: 'Name already taken in this lobby' };
+    if (
+      lobby.players.some(
+        (p) => p.name.toLowerCase() === playerName.toLowerCase(),
+      )
+    ) {
+      return { error: "Name already taken in this lobby" };
     }
 
     const player: Player = {
@@ -114,14 +148,12 @@ export const store: Store = {
     };
 
     lobby.players.push(player);
-
     await saveLobby(code, lobby);
+
     return { lobby, playerId: player.id };
   },
 
   getLobby: async (code: string): Promise<Lobby | undefined> => {
-    // Use getex to refresh TTL on every read (including polling)
-    // This ensures active lobbies don't expire while players are just viewing/polling
     const lobby = await redis.getex<Lobby>(getLobbyKey(code), {
       ex: LOBBY_TTL,
     });
@@ -129,156 +161,144 @@ export const store: Store = {
   },
 
   leaveLobby: async (code: string, playerId: string) => {
-    const lobby = await store.getLobby(code);
-    if (!lobby) return;
+    await updateLobby(code, (lobby) => {
+      lobby.players = lobby.players.filter((p) => p.id !== playerId);
 
-    lobby.players = lobby.players.filter((p) => p.id !== playerId);
-
-    // If host leaves, assign new host or delete lobby if empty
-    if (lobby.players.length === 0) {
-      await redis.del(getLobbyKey(code));
-    } else {
-      const hostLeft = !lobby.players.some(p => p.isHost);
+      // If host leaves, assign new host
+      const hostLeft = !lobby.players.some((p) => p.isHost);
       if (hostLeft && lobby.players[0]) {
         lobby.players[0].isHost = true;
       }
-      await saveLobby(code, lobby);
-    }
+    });
   },
 
   startGame: async (code: string) => {
-    const lobby = await store.getLobby(code);
-    if (!lobby) return;
+    await updateLobby(code, (lobby) => {
+      // Select random location from selectedLocations
+      let availableLocations = [...lobby.settings.selectedLocations];
 
-    // Select random location from selectedLocations
-    const availableLocations = lobby.settings.selectedLocations;
-    
-    // Fallback if no locations selected
-    if (!availableLocations || availableLocations.length === 0) {
-        availableLocations.push(...gameData.spyfall1.map(l => l.location));
-    }
-
-    const randomLocIndex = Math.floor(Math.random() * availableLocations.length);
-    const selectedLocationName = availableLocations[randomLocIndex];
-    
-    // Find the location object to get roles
-    const allLocations = Object.values(gameData as Record<string, { location: string; roles: string[] }[]>).flat();
-    const selectedLocation = allLocations.find(l => l.location === selectedLocationName);
-
-    if (!selectedLocation) {
-        console.error("Selected location not found in game data:", selectedLocationName);
-        return; // Should not happen
-    }
-
-    lobby.location = selectedLocation.location;
-    lobby.status = 'IN_PROGRESS';
-
-    // Timer setup
-    lobby.timerStartTime = Date.now();
-    lobby.timerAccumulated = 0;
-    lobby.isPaused = false;
-
-    // Assign roles
-    const roles = [...selectedLocation.roles];
-    // Shuffle players
-    const shuffledPlayers = [...lobby.players].sort(() => Math.random() - 0.5);
-
-    // Assign spies
-    let spiesAssigned = 0;
-    const spyCount = lobby.settings.spyCount;
-
-    shuffledPlayers.forEach((player, index) => {
-      // Find original player object to update
-      const originalPlayer = lobby.players.find(p => p.id === player.id);
-      if (!originalPlayer) return;
-
-      if (spiesAssigned < spyCount) {
-        originalPlayer.isSpy = true;
-        originalPlayer.role = 'Spy';
-        spiesAssigned++;
-      } else {
-        originalPlayer.isSpy = false;
-        // Assign random role from list, loop if fewer roles than players
-        const roleIndex = index % roles.length;
-        originalPlayer.role = roles[roleIndex];
+      // Fallback to default locations
+      if (availableLocations.length === 0) {
+        availableLocations = gameData.spyfall1.map((l) => l.location);
       }
-    });
 
-    await saveLobby(code, lobby);
+      const randomLocIndex = Math.floor(
+        Math.random() * availableLocations.length,
+      );
+      const selectedLocationName = availableLocations[randomLocIndex];
+
+      // Find the location object to get roles
+      const allLocations = Object.values(
+        gameData as Record<string, { location: string; roles: string[] }[]>,
+      ).flat();
+      const selectedLocation = allLocations.find(
+        (l) => l.location === selectedLocationName,
+      );
+
+      if (!selectedLocation) {
+        console.error(
+          "Selected location not found in game data:",
+          selectedLocationName,
+        );
+        return;
+      }
+
+      lobby.location = selectedLocation.location;
+      lobby.status = "IN_PROGRESS";
+
+      // Timer setup
+      lobby.timerStartTime = Date.now();
+      lobby.timerAccumulated = 0;
+      lobby.isPaused = false;
+
+      // Assign roles
+      const roles = [...selectedLocation.roles];
+      // Shuffle players
+      const shuffledPlayers = [...lobby.players];
+      for (let i = shuffledPlayers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = shuffledPlayers[i]!;
+        shuffledPlayers[i] = shuffledPlayers[j]!;
+        shuffledPlayers[j] = temp;
+      }
+
+      // Assign spies
+      let spiesAssigned = 0;
+      const spyCount = lobby.settings.spyCount;
+      const playerMap = new Map(lobby.players.map((p) => [p.id, p]));
+
+      shuffledPlayers.forEach((player, index) => {
+        const originalPlayer = playerMap.get(player.id)!;
+
+        if (spiesAssigned < spyCount) {
+          originalPlayer.isSpy = true;
+          originalPlayer.role = "Spy";
+          spiesAssigned++;
+        } else {
+          originalPlayer.isSpy = false;
+          // Assign roles, cycling through available roles if needed
+          const roleIndex = index % roles.length;
+          originalPlayer.role = roles[roleIndex];
+        }
+      });
+    });
   },
 
   togglePause: async (code: string) => {
-    const lobby = await store.getLobby(code);
-    if (!lobby || lobby.status !== 'IN_PROGRESS') return;
+    await updateLobby(code, (lobby) => {
+      if (lobby.status !== "IN_PROGRESS") return false;
 
-    if (lobby.isPaused) {
-      // Resume
-      lobby.timerStartTime = Date.now();
-      lobby.isPaused = false;
-    } else {
-      // Pause
-      const now = Date.now();
-      lobby.timerAccumulated = (lobby.timerAccumulated || 0) + (now - (lobby.timerStartTime || now));
-      lobby.timerStartTime = undefined;
-      lobby.isPaused = true;
-    }
-
-    await saveLobby(code, lobby);
+      if (lobby.isPaused) {
+        // Resume
+        lobby.timerStartTime = Date.now();
+        lobby.isPaused = false;
+      } else {
+        // Pause
+        const now = Date.now();
+        lobby.timerAccumulated =
+          (lobby.timerAccumulated || 0) + (now - (lobby.timerStartTime || now));
+        lobby.timerStartTime = undefined;
+        lobby.isPaused = true;
+      }
+    });
   },
 
   resetGame: async (code: string) => {
-    const lobby = await store.getLobby(code);
-    if (!lobby) return;
-
-    lobby.status = 'LOBBY';
-    lobby.location = undefined;
-    lobby.timerStartTime = undefined;
-    lobby.timerAccumulated = undefined;
-    lobby.isPaused = false;
-    lobby.players.forEach(p => {
-      p.role = undefined;
-      p.isSpy = undefined;
+    await updateLobby(code, (lobby) => {
+      lobby.status = "LOBBY";
+      lobby.location = undefined;
+      lobby.timerStartTime = undefined;
+      lobby.timerAccumulated = undefined;
+      lobby.isPaused = false;
+      lobby.players.forEach((p) => {
+        p.role = undefined;
+        p.isSpy = undefined;
+      });
     });
-
-    await saveLobby(code, lobby);
   },
 
   promoteHost: async (code: string, newHostId: string) => {
-    const lobby = await store.getLobby(code);
-    if (!lobby) return;
+    await updateLobby(code, (lobby) => {
+      const newHost = lobby.players.find((p) => p.id === newHostId);
+      if (!newHost) return false;
 
-    const newHost = lobby.players.find(p => p.id === newHostId);
-    if (!newHost) return;
+      // Remove host status from all players
+      lobby.players.forEach((p) => (p.isHost = false));
 
-    // Remove host status from all players
-    lobby.players.forEach(p => p.isHost = false);
-
-    // Assign new host
-    newHost.isHost = true;
-
-    await saveLobby(code, lobby);
+      // Assign new host
+      newHost.isHost = true;
+    });
   },
 
   kickPlayer: async (code: string, playerId: string) => {
-    const lobby = await store.getLobby(code);
-    if (!lobby) return;
-
-    lobby.players = lobby.players.filter((p) => p.id !== playerId);
-
-    // If lobby becomes empty, delete it
-    if (lobby.players.length === 0) {
-      await redis.del(getLobbyKey(code));
-    } else {
-      await saveLobby(code, lobby);
-    }
+    await updateLobby(code, (lobby) => {
+      lobby.players = lobby.players.filter((p) => p.id !== playerId);
+    });
   },
 
   updateSettings: async (code: string, settings: Partial<GameSettings>) => {
-    const lobby = await store.getLobby(code);
-    if (!lobby) return;
-
-    lobby.settings = { ...lobby.settings, ...settings };
-
-    await saveLobby(code, lobby);
-  }
+    await updateLobby(code, (lobby) => {
+      lobby.settings = { ...lobby.settings, ...settings };
+    });
+  },
 };
