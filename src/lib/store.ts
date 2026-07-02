@@ -81,13 +81,14 @@ export interface Store {
   ) => Promise<{ lobby?: Lobby; error?: string; playerId?: string }>;
   getLobby: (code: string) => Promise<Lobby | undefined>;
   leaveLobby: (code: string, playerId: string) => Promise<void>;
-  startGame: (code: string) => Promise<void>;
-  togglePause: (code: string) => Promise<void>;
-  resetGame: (code: string) => Promise<void>;
-  promoteHost: (code: string, newHostId: string) => Promise<void>;
-  kickPlayer: (code: string, playerId: string) => Promise<void>;
+  startGame: (code: string, hostId: string) => Promise<void>;
+  togglePause: (code: string, hostId: string) => Promise<void>;
+  resetGame: (code: string, hostId: string) => Promise<void>;
+  promoteHost: (code: string, hostId: string, newHostId: string) => Promise<void>;
+  kickPlayer: (code: string, hostId: string, playerId: string) => Promise<void>;
   updateSettings: (
     code: string,
+    hostId: string,
     settings: Partial<GameSettings>,
   ) => Promise<void>;
 }
@@ -172,8 +173,11 @@ export const store: Store = {
     });
   },
 
-  startGame: async (code: string) => {
+  startGame: async (code: string, hostId: string) => {
     await updateLobby(code, (lobby) => {
+      const caller = lobby.players.find((p) => p.id === hostId);
+      if (!caller?.isHost) return false;
+
       // Select random location from selectedLocations
       let availableLocations = [...lobby.settings.selectedLocations];
 
@@ -244,8 +248,11 @@ export const store: Store = {
     });
   },
 
-  togglePause: async (code: string) => {
+  togglePause: async (code: string, hostId: string) => {
     await updateLobby(code, (lobby) => {
+      const caller = lobby.players.find((p) => p.id === hostId);
+      if (!caller?.isHost) return false;
+
       if (lobby.status !== "IN_PROGRESS") return false;
 
       if (lobby.isPaused) {
@@ -263,8 +270,11 @@ export const store: Store = {
     });
   },
 
-  resetGame: async (code: string) => {
+  resetGame: async (code: string, hostId: string) => {
     await updateLobby(code, (lobby) => {
+      const caller = lobby.players.find((p) => p.id === hostId);
+      if (!caller?.isHost) return false;
+
       lobby.status = "LOBBY";
       lobby.location = undefined;
       lobby.timerStartTime = undefined;
@@ -277,8 +287,11 @@ export const store: Store = {
     });
   },
 
-  promoteHost: async (code: string, newHostId: string) => {
+  promoteHost: async (code: string, hostId: string, newHostId: string) => {
     await updateLobby(code, (lobby) => {
+      const caller = lobby.players.find((p) => p.id === hostId);
+      if (!caller?.isHost) return false;
+
       const newHost = lobby.players.find((p) => p.id === newHostId);
       if (!newHost) return false;
 
@@ -290,14 +303,20 @@ export const store: Store = {
     });
   },
 
-  kickPlayer: async (code: string, playerId: string) => {
+  kickPlayer: async (code: string, hostId: string, playerId: string) => {
     await updateLobby(code, (lobby) => {
+      const caller = lobby.players.find((p) => p.id === hostId);
+      if (!caller?.isHost) return false;
+
       lobby.players = lobby.players.filter((p) => p.id !== playerId);
     });
   },
 
-  updateSettings: async (code: string, settings: Partial<GameSettings>) => {
+  updateSettings: async (code: string, hostId: string, settings: Partial<GameSettings>) => {
     await updateLobby(code, (lobby) => {
+      const caller = lobby.players.find((p) => p.id === hostId);
+      if (!caller?.isHost) return false;
+
       lobby.settings = { ...lobby.settings, ...settings };
     });
   },

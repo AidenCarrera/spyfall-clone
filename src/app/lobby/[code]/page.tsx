@@ -173,7 +173,7 @@ export default function LobbyPage({
         return;
     }
     setIsRevealed(false);
-    await startGameAction(code);
+    await startGameAction(code, playerId!);
     mutate();
   };
 
@@ -190,7 +190,7 @@ export default function LobbyPage({
     if (!isTimeUp && !confirm("Are you sure you want to end the game early?"))
       return;
     setIsRevealed(false);
-    await resetGameAction(code);
+    await resetGameAction(code, playerId!);
     mutate();
   };
 
@@ -219,7 +219,7 @@ export default function LobbyPage({
     // Apply optimistic update
     await mutate({ lobby: updatedLobby }, { revalidate: false });
 
-    await togglePauseAction(code);
+    await togglePauseAction(code, playerId!);
     mutate();
   };
 

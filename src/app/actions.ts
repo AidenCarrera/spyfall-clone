@@ -71,9 +71,9 @@ export async function leaveLobbyAction(code: string, playerId: string) {
     }
 }
 
-export async function kickPlayerAction(code: string, playerId: string) {
+export async function kickPlayerAction(code: string, hostId: string, playerId: string) {
     try {
-        await store.kickPlayer(code, playerId);
+        await store.kickPlayer(code, hostId, playerId);
         return { success: true };
     } catch (error) {
         console.error('kickPlayerAction error:', error);
@@ -81,9 +81,9 @@ export async function kickPlayerAction(code: string, playerId: string) {
     }
 }
 
-export async function startGameAction(code: string) {
+export async function startGameAction(code: string, hostId: string) {
     try {
-        await store.startGame(code);
+        await store.startGame(code, hostId);
         return { success: true };
     } catch (error) {
         console.error('startGameAction error:', error);
@@ -91,9 +91,9 @@ export async function startGameAction(code: string) {
     }
 }
 
-export async function resetGameAction(code: string) {
+export async function resetGameAction(code: string, hostId: string) {
     try {
-        await store.resetGame(code);
+        await store.resetGame(code, hostId);
         return { success: true };
     } catch (error) {
         console.error('resetGameAction error:', error);
@@ -101,9 +101,9 @@ export async function resetGameAction(code: string) {
     }
 }
 
-export async function promoteHostAction(code: string, newHostId: string) {
+export async function promoteHostAction(code: string, hostId: string, newHostId: string) {
     try {
-        await store.promoteHost(code, newHostId);
+        await store.promoteHost(code, hostId, newHostId);
         return { success: true };
     } catch (error) {
         console.error('promoteHostAction error:', error);
@@ -111,9 +111,9 @@ export async function promoteHostAction(code: string, newHostId: string) {
     }
 }
 
-export async function updateSettingsAction(code: string, settings: { timerDuration?: number; spyCount?: number; selectedLocations?: string[] }) {
+export async function updateSettingsAction(code: string, hostId: string, settings: { timerDuration?: number; spyCount?: number; selectedLocations?: string[] }) {
     try {
-        await store.updateSettings(code, settings);
+        await store.updateSettings(code, hostId, settings);
         return { success: true };
     } catch (error) {
         console.error('updateSettingsAction error:', error);
@@ -121,9 +121,9 @@ export async function updateSettingsAction(code: string, settings: { timerDurati
     }
 }
 
-export async function togglePauseAction(code: string) {
+export async function togglePauseAction(code: string, hostId: string) {
     try {
-        await store.togglePause(code);
+        await store.togglePause(code, hostId);
         return { success: true };
     } catch (error) {
         console.error('togglePauseAction error:', error);

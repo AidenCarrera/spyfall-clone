@@ -58,7 +58,7 @@ export function PlayerList({
                           `Are you sure you want to make ${p.name} the host? You will lose host privileges.`
                         )
                       ) {
-                        await promoteHostAction(code, p.id);
+                        await promoteHostAction(code, playerId, p.id);
                         mutate();
                       }
                     }}
@@ -69,7 +69,7 @@ export function PlayerList({
                   <button
                     onClick={async () => {
                       if (confirm(`Are you sure you want to kick ${p.name}?`)) {
-                        await kickPlayerAction(code, p.id);
+                        await kickPlayerAction(code, playerId, p.id);
                         mutate();
                       }
                     }}

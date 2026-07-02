@@ -13,6 +13,7 @@ import gameData from "@/src/lib/game-data.json";
 interface GameSettingsProps {
   code: string;
   lobby: ClientLobbyState;
+  playerId: string;
   isHost: boolean;
   mutate: KeyedMutator<{ lobby?: ClientLobbyState; error?: string }>;
 }
@@ -20,6 +21,7 @@ interface GameSettingsProps {
 export function GameSettings({
   code,
   lobby,
+  playerId,
   isHost,
   mutate,
 }: GameSettingsProps) {
@@ -40,7 +42,7 @@ export function GameSettings({
                   { lobby: { ...lobby, timerDuration: newDuration } },
                   { revalidate: false }
                 );
-                await updateSettingsAction(code, {
+                await updateSettingsAction(code, playerId, {
                   timerDuration: newDuration,
                 });
                 mutate();
@@ -63,7 +65,7 @@ export function GameSettings({
                   { lobby: { ...lobby, timerDuration: newDuration } },
                   { revalidate: false }
                 );
-                await updateSettingsAction(code, {
+                await updateSettingsAction(code, playerId, {
                   timerDuration: newDuration,
                 });
                 mutate();
@@ -96,7 +98,7 @@ export function GameSettings({
                       { lobby: { ...lobby, spyCount: count } },
                       { revalidate: false }
                     );
-                    await updateSettingsAction(code, { spyCount: count });
+                    await updateSettingsAction(code, playerId, { spyCount: count });
                     mutate();
                   }}
                   className={`flex items-center gap-4 p-2 rounded transition-colors hover:bg-slate-800 cursor-pointer ${
@@ -188,7 +190,7 @@ export function GameSettings({
                   { revalidate: false }
                 );
 
-                await updateSettingsAction(code, {
+                await updateSettingsAction(code, playerId, {
                   selectedLocations: newSelectedLocations,
                 });
                 mutate();
