@@ -30,7 +30,6 @@ export interface Lobby {
   timerAccumulated?: number; // Time elapsed in previous segments
   isPaused: boolean;
   settings: GameSettings;
-  lastActivity: number; // for cleanup
 }
 
 // Helper to generate a random code
@@ -45,10 +44,29 @@ function generateCode(length: number = 6): string {
 
 export const LOBBY_TTL = 86400; // 24 hours in seconds
 
-export const store = {
+const getLobbyKey = (code: string) => `lobby:${code.toUpperCase()}`;
+
+const saveLobby = async (code: string, lobby: Lobby) => {
+  await redis.set(getLobbyKey(code), lobby, { ex: LOBBY_TTL });
+};
+
+export interface Store {
+  createLobby: (hostName: string) => Promise<Lobby>;
+  joinLobby: (code: string, playerName: string) => Promise<{ lobby?: Lobby; error?: string; playerId?: string }>;
+  getLobby: (code: string) => Promise<Lobby | undefined>;
+  leaveLobby: (code: string, playerId: string) => Promise<void>;
+  startGame: (code: string) => Promise<void>;
+  togglePause: (code: string) => Promise<void>;
+  resetGame: (code: string) => Promise<void>;
+  promoteHost: (code: string, newHostId: string) => Promise<void>;
+  kickPlayer: (code: string, playerId: string) => Promise<void>;
+  updateSettings: (code: string, settings: Partial<GameSettings>) => Promise<void>;
+}
+
+export const store: Store = {
   createLobby: async (hostName: string): Promise<Lobby> => {
     let code = generateCode();
-    while (await redis.exists(`lobby:${code}`)) {
+    while (await redis.exists(getLobbyKey(code))) {
       code = generateCode();
     }
 
@@ -69,10 +87,9 @@ export const store = {
         timerDuration: 8,
         spyCount: 1,
       },
-      lastActivity: Date.now(),
     };
 
-    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+    await saveLobby(code, lobby);
     return lobby;
   },
 
@@ -97,16 +114,15 @@ export const store = {
     };
 
     lobby.players.push(player);
-    lobby.lastActivity = Date.now();
 
-    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+    await saveLobby(code, lobby);
     return { lobby, playerId: player.id };
   },
 
   getLobby: async (code: string): Promise<Lobby | undefined> => {
     // Use getex to refresh TTL on every read (including polling)
     // This ensures active lobbies don't expire while players are just viewing/polling
-    const lobby = await redis.getex<Lobby>(`lobby:${code.toUpperCase()}`, {
+    const lobby = await redis.getex<Lobby>(getLobbyKey(code), {
       ex: LOBBY_TTL,
     });
     return lobby || undefined;
@@ -120,14 +136,13 @@ export const store = {
 
     // If host leaves, assign new host or delete lobby if empty
     if (lobby.players.length === 0) {
-      await redis.del(`lobby:${code}`);
+      await redis.del(getLobbyKey(code));
     } else {
       const hostLeft = !lobby.players.some(p => p.isHost);
       if (hostLeft && lobby.players[0]) {
         lobby.players[0].isHost = true;
       }
-      lobby.lastActivity = Date.now();
-      await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+      await saveLobby(code, lobby);
     }
   },
 
@@ -189,8 +204,7 @@ export const store = {
       }
     });
 
-    lobby.lastActivity = Date.now();
-    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+    await saveLobby(code, lobby);
   },
 
   togglePause: async (code: string) => {
@@ -209,8 +223,7 @@ export const store = {
       lobby.isPaused = true;
     }
 
-    lobby.lastActivity = Date.now();
-    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+    await saveLobby(code, lobby);
   },
 
   resetGame: async (code: string) => {
@@ -227,8 +240,7 @@ export const store = {
       p.isSpy = undefined;
     });
 
-    lobby.lastActivity = Date.now();
-    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+    await saveLobby(code, lobby);
   },
 
   promoteHost: async (code: string, newHostId: string) => {
@@ -244,8 +256,7 @@ export const store = {
     // Assign new host
     newHost.isHost = true;
 
-    lobby.lastActivity = Date.now();
-    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+    await saveLobby(code, lobby);
   },
 
   kickPlayer: async (code: string, playerId: string) => {
@@ -256,10 +267,9 @@ export const store = {
 
     // If lobby becomes empty, delete it
     if (lobby.players.length === 0) {
-      await redis.del(`lobby:${code}`);
+      await redis.del(getLobbyKey(code));
     } else {
-      lobby.lastActivity = Date.now();
-      await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+      await saveLobby(code, lobby);
     }
   },
 
@@ -269,7 +279,6 @@ export const store = {
 
     lobby.settings = { ...lobby.settings, ...settings };
 
-    lobby.lastActivity = Date.now();
-    await redis.set(`lobby:${code}`, lobby, { ex: LOBBY_TTL });
+    await saveLobby(code, lobby);
   }
 };
