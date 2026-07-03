@@ -42,6 +42,7 @@ function generateCode(length: number = 6): string {
 }
 
 export const LOBBY_TTL = 86400; // 24 hours in seconds
+export const MAX_PLAYERS = 12;
 
 const getLobbyKey = (code: string) => `lobby:${code.toUpperCase()}`;
 
@@ -146,6 +147,11 @@ export const store: Store = {
     const result = await updateLobby(code, (lobby) => {
       if (lobby.status !== "LOBBY") {
         joinError = "Game already in progress";
+        return false;
+      }
+
+      if (lobby.players.length >= MAX_PLAYERS) {
+        joinError = "Lobby is full";
         return false;
       }
 
