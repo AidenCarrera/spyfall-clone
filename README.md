@@ -72,8 +72,8 @@ The goal of this project is to make playing Spyfall with friends quick and easy.
    Add your Upstash Redis credentials to `.env.local`:
 
    ```env
-   KV_REST_API_URL="your-redis-url"
-   KV_REST_API_TOKEN="your-redis-token"
+   UPSTASH_REDIS_REST_URL="your-redis-url"
+   UPSTASH_REDIS_REST_TOKEN="your-redis-token"
    ```
 
 4. **Run the app:**
