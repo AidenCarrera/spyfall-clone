@@ -213,7 +213,7 @@ export const store: Store = {
           "Selected location not found in game data:",
           selectedLocationName,
         );
-        return;
+        return false;
       }
 
       lobby.location = selectedLocation.location;
