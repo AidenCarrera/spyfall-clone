@@ -24,6 +24,8 @@ export default function LobbyPage({
   const router = useRouter();
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Timer state
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
@@ -172,9 +174,14 @@ export default function LobbyPage({
       )
         return;
     }
+    setIsStarting(true);
     setIsRevealed(false);
-    await startGameAction(code, playerId!);
-    mutate();
+    try {
+      await startGameAction(code, playerId!);
+      mutate();
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const handleLeave = async () => {
@@ -189,9 +196,30 @@ export default function LobbyPage({
   const handleReset = async () => {
     if (!isTimeUp && !confirm("Are you sure you want to end the game early?"))
       return;
+    setIsResetting(true);
     setIsRevealed(false);
-    await resetGameAction(code, playerId!);
-    mutate();
+    // Optimistic update: immediately return to lobby view
+    await mutate(
+      {
+        lobby: {
+          ...lobby!,
+          status: "LOBBY",
+          location: undefined,
+          timerStartTime: undefined,
+          timerAccumulated: undefined,
+          isPaused: false,
+          isSpy: undefined,
+          me: lobby!.me ? { ...lobby!.me, isSpy: undefined, role: undefined } : undefined,
+        },
+      },
+      { revalidate: false },
+    );
+    try {
+      await resetGameAction(code, playerId!);
+      mutate();
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleTogglePause = async () => {
@@ -270,6 +298,7 @@ export default function LobbyPage({
         lobby={lobby}
         playerId={playerId!}
         mutate={mutate}
+        isStarting={isStarting}
         onStartGame={handleStartGame}
         onLeave={handleLeave}
       />
@@ -286,6 +315,7 @@ export default function LobbyPage({
       isTimeUp={isTimeUp}
       onLeave={handleLeave}
       onTogglePause={handleTogglePause}
+      isResetting={isResetting}
       onReset={handleReset}
     />
   );

@@ -15,6 +15,7 @@ interface GameViewProps {
   isTimeUp: boolean;
   onLeave: () => void;
   onTogglePause: () => void;
+  isResetting?: boolean;
   onReset: () => void;
 }
 
@@ -26,6 +27,7 @@ export function GameView({
   isTimeUp,
   onLeave,
   onTogglePause,
+  isResetting,
   onReset,
 }: GameViewProps) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -87,8 +89,9 @@ export function GameView({
                   variant="danger"
                   onClick={onReset}
                   className="text-xs px-2 py-1"
+                  disabled={isResetting}
                 >
-                  End Game
+                  {isResetting ? "Ending..." : "End Game"}
                 </Button>
               </div>
             )}

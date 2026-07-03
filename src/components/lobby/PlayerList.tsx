@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { KeyedMutator } from "swr";
 import { Card } from "@/src/components/Card";
 import {
@@ -23,6 +24,8 @@ export function PlayerList({
   isHost,
   mutate,
 }: PlayerListProps) {
+  const [pendingPlayerId, setPendingPlayerId] = useState<string | null>(null);
+
   return (
     <Card title={`Players (${lobby.players.length})`}>
       <ul className="space-y-2">
@@ -52,28 +55,80 @@ export function PlayerList({
               {isHost && !p.isHost && (
                 <div className="flex gap-2">
                   <button
+                    disabled={pendingPlayerId === p.id}
                     onClick={async () => {
                       if (
                         confirm(
                           `Are you sure you want to make ${p.name} the host? You will lose host privileges.`
                         )
                       ) {
-                        await promoteHostAction(code, playerId, p.id);
-                        mutate();
+                        setPendingPlayerId(p.id);
+                        // Optimistic: swap host flag immediately
+                        await mutate(
+                          (current) =>
+                            current?.lobby
+                              ? {
+                                  ...current,
+                                  lobby: {
+                                    ...current.lobby,
+                                    players: current.lobby.players.map((pl) => ({
+                                      ...pl,
+                                      isHost: pl.id === p.id,
+                                    })),
+                                    me: current.lobby.me
+                                      ? {
+                                          ...current.lobby.me,
+                                          isHost:
+                                            current.lobby.me.id === p.id,
+                                        }
+                                      : undefined,
+                                  },
+                                }
+                              : current,
+                          { revalidate: false }
+                        );
+                        try {
+                          await promoteHostAction(code, playerId, p.id);
+                          mutate();
+                        } finally {
+                          setPendingPlayerId(null);
+                        }
                       }
                     }}
-                    className="text-xs bg-slate-600 hover:bg-slate-500 text-slate-300 px-2 py-1 rounded transition-colors"
+                    className="text-xs bg-slate-600 hover:bg-slate-500 text-slate-300 px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Make Host
                   </button>
                   <button
+                    disabled={pendingPlayerId === p.id}
                     onClick={async () => {
                       if (confirm(`Are you sure you want to kick ${p.name}?`)) {
-                        await kickPlayerAction(code, playerId, p.id);
-                        mutate();
+                        setPendingPlayerId(p.id);
+                        // Optimistic: remove player from list immediately
+                        await mutate(
+                          (current) =>
+                            current?.lobby
+                              ? {
+                                  ...current,
+                                  lobby: {
+                                    ...current.lobby,
+                                    players: current.lobby.players.filter(
+                                      (pl) => pl.id !== p.id
+                                    ),
+                                  },
+                                }
+                              : current,
+                          { revalidate: false }
+                        );
+                        try {
+                          await kickPlayerAction(code, playerId, p.id);
+                          mutate();
+                        } finally {
+                          setPendingPlayerId(null);
+                        }
                       }
                     }}
-                    className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-red-400 px-2 py-1 rounded transition-colors"
+                    className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-red-400 px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Kick
                   </button>

@@ -14,6 +14,7 @@ interface LobbyViewProps {
   lobby: ClientLobbyState;
   playerId: string;
   mutate: KeyedMutator<{ lobby?: ClientLobbyState; error?: string }>;
+  isStarting?: boolean;
   onStartGame: () => void;
   onLeave: () => void;
 }
@@ -23,6 +24,7 @@ export function LobbyView({
   lobby,
   playerId,
   mutate,
+  isStarting,
   onStartGame,
   onLeave,
 }: LobbyViewProps) {
@@ -84,9 +86,11 @@ export function LobbyView({
           <Button
             fullWidth
             onClick={onStartGame}
-            disabled={lobby.players.length < 3}
+            disabled={lobby.players.length < 3 || isStarting}
           >
-            Start Game {lobby.players.length < 3 && "(Need 3+ players)"}
+            {isStarting
+              ? "Starting..."
+              : `Start Game${lobby.players.length < 3 ? " (Need 3+ players)" : ""}`}
           </Button>
         ) : (
           <p className="text-center text-slate-500 animate-pulse">
