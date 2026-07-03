@@ -1,71 +1,96 @@
-# Spyfall Clone 🕵️‍♂️ – Next.js Side Project
+# Spyfall Clone
 
-A modern, real-time web implementation of the popular social deduction party game **Spyfall**, built with **Next.js**, **React**, and **Redis**.
+A fast, mobile-first implementation of Spyfall that supports both Spyfall 1 and Spyfall 2 location sets, built with Next.js, React, and Redis.
+
+Play instantly with friends in real-time with no accounts or setup required.
+
+---
 
 ## Purpose
 
-The goal of this project is to make playing Spyfall with friends quick and easy. The UI is simple, clean, and easy to learn, so you can open it at a party, share a short code, and start a round with no hassle.
+The goal of this project is to make playing Spyfall with friends quick and easy. The UI is designed to be highly intuitive, clean, and fast to learn so that anyone can join a lobby, understand the interface instantly, and start playing with their friends.
+
+---
+
+## Live Demo
+
+**Play it here:** [spyfall-clone.vercel.app](https://spyfall-clone.vercel.app/)
+
+---
 
 ## Features
 
-- Create or join lobbies instantly with a simple 6-character code
-- Real-time synchronization of game state across all devices
-- Robust client-side timer with server drift correction for accuracy
-- Session persistence allows seamless rejoining after closing the tab
-- Smart join links for joining via shared URLs
-- Customizable settings for timer duration, spy count, and location packs
-- "Tap to Reveal" role cards to prevent accidental leaks
-- In-game locations reference grid for crossing off suspects
-- Fully responsive design optimized for mobile devices
+- **Instant Lobbies:** Start a game and invite players with a 6-character room code or link.
+- **Spyfall 1 + 2 Support:** Includes both classic and expanded location sets for variety across games.
+- **Fast Sync (Redis-backed polling):** Game settings, timer, and roles stay synced across all devices.
+- **Easy Reconnects:** Rejoin active games automatically if you disconnect or close your tab.
+- **Host Controls:** Host can customize settings, adjust the timer, select locations, and assign roles.
+- **Mobile Friendly:** Tap-to-reveal cards to hide your role, and an interactive grid to cross off locations.
+
+---
 
 ## Tech Stack
 
-- **Next.js 15** – App Router framework for server-side rendering and API routes
-- **React 19** – UI library for building interactive, state-driven components
-- **Tailwind CSS v4** – Utility-first CSS for rapid, beautiful styling
-- **TypeScript** – Ensures type safety across the full stack
-- **Redis (Upstash)** – Fast, ephemeral key-value store for managing game state
-- **SWR** – React Hooks for data fetching, handling polling and cache synchronization
+- **Framework:** Next.js 16
+- **Frontend Library:** React 19
+- **Database / State Store:** Upstash Redis
+- **Styling:** Tailwind CSS v4
+- **Language:** TypeScript
 
-## Installation and setup
+---
 
-To clone and run this application, you'll need Git and Node.js installed. You will also need a Redis instance (local or hosted). Then:
+## Getting Started
 
-```
-# Clone this repository
-git clone https://github.com/AidenCarrera/spyfall-clone.git
+### Prerequisites
 
-# Go into the repository
-cd spyfall-clone
+- **Node.js** (v24 recommended)
+- **pnpm**
+- **Upstash Redis** account
 
-# Install dependencies
-npm install
+### Setup
 
-# Set up environment variables
-# (Create a .env.local file and add your Redis credentials)
-# KV_REST_API_URL=...
-# KV_REST_API_TOKEN=...
+1. **Clone the project:**
+   ```bash
+   git clone https://github.com/AidenCarrera/spyfall-clone.git
+   cd spyfall-clone
+   ```
 
-# Run the app
-npm run dev
+2. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
 
-# Open your browser at http://localhost:3000 to view the app
-```
+3. **Configure Environment Variables:**
+   Copy the example environment template:
+   ```bash
+   cp .env.example .env.local
+   ```
+   Add your Upstash Redis credentials to `.env.local`:
+   ```env
+   KV_REST_API_URL="your-redis-url"
+   KV_REST_API_TOKEN="your-redis-token"
+   ```
 
-## Playing The Game
+4. **Run the app:**
+   ```bash
+   pnpm dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- Create Game: enter your name to host a new lobby and get a unique code
-- Join Game: friends can join by entering the code or clicking a shared link
-- Lobby Settings: host adjusts timer, number of spies, and location packs
-- Start Game: once everyone is in, the host starts the game
-- Non-Spies: ask questions to deduce who the spy is without revealing the location
-- The Spy: listen carefully to infer the location and blend in
-- Reveal Role: tap your card to see if you are the Spy or what your role is
-- Cross Off: tap locations in the reference grid to eliminate suspects
-- Pause/End: host can pause the timer or end the game early
+---
 
-## Future Improvements
+## How to Play
 
-- Add custom location packs created by users
-- Add an AI question prompt that gives players a relevant, in-theme question when they’re out of ideas
-- Add spectator mode for late joiners
+1. **Host a Game:** Start a lobby and share the 6-character room code or link.
+2. **Setup:** Customize the round timer, number of spies, and location packs.
+3. **Start:** The host starts the match once everyone has joined.
+4. **Play:**
+   - **Spies:** Your card says "Spy". Listen to questions to guess the secret location.
+   - **Non-Spies:** You will see the secret location. Ask clever questions to expose the spy without giving away the location.
+5. **Cross off:** Tap locations in the reference grid to keep track of suspects.
+
+---
+
+## License
+
+MIT
