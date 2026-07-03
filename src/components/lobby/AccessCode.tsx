@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Link as LinkIcon } from "lucide-react";
 import { Card } from "@/src/components/Card";
 
 interface AccessCodeProps {
@@ -9,42 +9,77 @@ interface AccessCodeProps {
 }
 
 export function AccessCode({ code }: AccessCodeProps) {
-  const [isCopied, setIsCopied] = useState(false);
+  const [isCodeCopied, setIsCodeCopied] = useState(false);
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(code);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+      setIsCodeCopied(true);
+      setTimeout(() => setIsCodeCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err);
+      console.error("Failed to copy code:", err);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      const inviteUrl = `${window.location.origin}/join?code=${code}`;
+      await navigator.clipboard.writeText(inviteUrl);
+      setIsLinkCopied(true);
+      setTimeout(() => setIsLinkCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy invite link:", err);
     }
   };
 
   return (
-    <Card className="text-center space-y-2">
-      <p className="text-slate-400 text-sm uppercase tracking-wider">
-        Access Code
-      </p>
-      <div className="flex items-center justify-center">
-        <div className="relative">
-          <p className="text-5xl font-mono font-bold text-blue-400 tracking-widest">
-            {code}
-          </p>
-          <div className="absolute left-full top-1/2 -translate-y-8/19 ml-4">
-            <button
-              onClick={handleCopy}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
-              title="Copy Access Code"
-            >
-              {isCopied ? (
-                <Check className="w-5 h-5 text-green-400" />
-              ) : (
-                <Copy className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-        </div>
+    <Card className="text-center space-y-4">
+      <div className="space-y-1">
+        <p className="text-slate-400 text-xs uppercase tracking-wider">
+          Access Code
+        </p>
+        <p className="text-5xl font-mono font-bold text-blue-400 tracking-widest">
+          {code}
+        </p>
+      </div>
+
+      <div className="flex items-center justify-center gap-5">
+        <button
+          onClick={handleCopyCode}
+          className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors cursor-pointer select-none focus:outline-none"
+          title="Copy Access Code"
+        >
+          {isCodeCopied ? (
+            <>
+              <Check className="w-4 h-4" />
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4" />
+              <span>Copy Code</span>
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={handleCopyLink}
+          className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors cursor-pointer select-none focus:outline-none"
+          title="Copy Invite Link"
+        >
+          {isLinkCopied ? (
+            <>
+              <Check className="w-4 h-4" />
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <LinkIcon className="w-4 h-4" />
+              <span>Copy Invite Link</span>
+            </>
+          )}
+        </button>
       </div>
     </Card>
   );
