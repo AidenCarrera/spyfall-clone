@@ -84,7 +84,11 @@ export interface Store {
   startGame: (code: string, hostId: string) => Promise<void>;
   togglePause: (code: string, hostId: string) => Promise<void>;
   resetGame: (code: string, hostId: string) => Promise<void>;
-  promoteHost: (code: string, hostId: string, newHostId: string) => Promise<void>;
+  promoteHost: (
+    code: string,
+    hostId: string,
+    newHostId: string,
+  ) => Promise<void>;
   kickPlayer: (code: string, hostId: string, playerId: string) => Promise<void>;
   updateSettings: (
     code: string,
@@ -95,31 +99,40 @@ export interface Store {
 
 export const store: Store = {
   createLobby: async (hostName: string): Promise<Lobby> => {
-    let code = generateCode();
-    while (await redis.exists(getLobbyKey(code))) {
-      code = generateCode();
-    }
-
     const host: Player = {
       id: crypto.randomUUID(),
       name: hostName,
       isHost: true,
     };
 
-    const lobby: Lobby = {
-      code,
-      players: [host],
-      status: "LOBBY",
-      isPaused: false,
-      settings: {
-        selectedLocations: gameData.spyfall1.map((l) => l.location),
-        timerEnabled: false,
-        timerDuration: 8,
-        spyCount: 1,
-      },
-    };
+    // Generate a unique lobby code using an atomic Redis "set if not exists".
+    // Retry if the generated code is already taken.
+    let lobby: Lobby | null = null;
+    while (!lobby) {
+      const code = generateCode();
+      const candidate: Lobby = {
+        code,
+        players: [host],
+        status: "LOBBY",
+        isPaused: false,
+        settings: {
+          selectedLocations: gameData.spyfall1.map((l) => l.location),
+          timerEnabled: false,
+          timerDuration: 8,
+          spyCount: 1,
+        },
+      };
 
-    await saveLobby(code, lobby);
+      const result = await redis.set(getLobbyKey(code), candidate, {
+        ex: LOBBY_TTL,
+        nx: true,
+      });
+
+      if (result === "OK") {
+        lobby = candidate;
+      }
+    }
+
     return lobby;
   },
 
@@ -321,7 +334,11 @@ export const store: Store = {
     });
   },
 
-  updateSettings: async (code: string, hostId: string, settings: Partial<GameSettings>) => {
+  updateSettings: async (
+    code: string,
+    hostId: string,
+    settings: Partial<GameSettings>,
+  ) => {
     await updateLobby(code, (lobby) => {
       const caller = lobby.players.find((p) => p.id === hostId);
       if (!caller?.isHost) return false;
