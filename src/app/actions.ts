@@ -33,6 +33,14 @@ const JoinLobbySchema = z.object({
     .max(20, "Player name must be 20 characters or less"),
 });
 
+const UpdateSettingsSchema = z
+  .object({
+    timerDuration: z.number().int().min(1).max(60).optional(),
+    spyCount: z.number().int().min(1).max(2).optional(),
+    selectedLocations: z.array(z.string()).min(1).optional(),
+  })
+  .strict();
+
 export async function createLobbyAction(hostName: string) {
   try {
     const ip = await getClientIp();
@@ -153,7 +161,12 @@ export async function updateSettingsAction(
   },
 ) {
   try {
-    await store.updateSettings(code, hostId, settings);
+    const parsed = UpdateSettingsSchema.safeParse(settings);
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0]?.message || "Invalid settings" };
+    }
+
+    await store.updateSettings(code, hostId, parsed.data);
     return { success: true };
   } catch (error) {
     console.error("updateSettingsAction error:", error);
