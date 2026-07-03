@@ -36,12 +36,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Spyfall Clone",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Spyfall - Deceive Your Friends, Find the Spy",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Spyfall - Deceive Your Friends, Find the Spy",
     description:
       "Play Spyfall online with friends. The spy must guess the location while others must identify the spy.",
+    images: ["/og-image.png"],
   },
 };
 
