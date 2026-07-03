@@ -127,31 +127,40 @@ export const store: Store = {
     code: string,
     playerName: string,
   ): Promise<{ lobby?: Lobby; error?: string; playerId?: string }> => {
-    const lobby = await store.getLobby(code);
-    if (!lobby) return { error: "Lobby not found" };
+    let playerId: string | undefined;
+    let joinError: string | undefined;
 
-    if (lobby.status !== "LOBBY") {
-      return { error: "Game already in progress" };
+    const result = await updateLobby(code, (lobby) => {
+      if (lobby.status !== "LOBBY") {
+        joinError = "Game already in progress";
+        return false;
+      }
+
+      if (
+        lobby.players.some(
+          (p) => p.name.toLowerCase() === playerName.toLowerCase(),
+        )
+      ) {
+        joinError = "Name already taken in this lobby";
+        return false;
+      }
+
+      const player: Player = {
+        id: crypto.randomUUID(),
+        name: playerName,
+        isHost: false,
+      };
+
+      lobby.players.push(player);
+      playerId = player.id;
+    });
+
+    if (!result.success) {
+      if (result.reason === "not_found") return { error: "Lobby not found" };
+      return { error: joinError };
     }
 
-    if (
-      lobby.players.some(
-        (p) => p.name.toLowerCase() === playerName.toLowerCase(),
-      )
-    ) {
-      return { error: "Name already taken in this lobby" };
-    }
-
-    const player: Player = {
-      id: crypto.randomUUID(),
-      name: playerName,
-      isHost: false,
-    };
-
-    lobby.players.push(player);
-    await saveLobby(code, lobby);
-
-    return { lobby, playerId: player.id };
+    return { lobby: result.lobby, playerId };
   },
 
   getLobby: async (code: string): Promise<Lobby | undefined> => {
