@@ -284,6 +284,7 @@ export default function LobbyPage({
       setIsRevealed={setIsRevealed}
       timeLeft={timeLeft}
       isTimeUp={isTimeUp}
+      onLeave={handleLeave}
       onTogglePause={handleTogglePause}
       onReset={handleReset}
     />

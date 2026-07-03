@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/src/components/Button";
 import { HelpModal } from "@/src/components/HelpModal";
 import { RoleCard } from "./RoleCard";
@@ -14,6 +13,7 @@ interface GameViewProps {
   setIsRevealed: (revealed: boolean) => void;
   timeLeft: string;
   isTimeUp: boolean;
+  onLeave: () => void;
   onTogglePause: () => void;
   onReset: () => void;
 }
@@ -24,11 +24,11 @@ export function GameView({
   setIsRevealed,
   timeLeft,
   isTimeUp,
+  onLeave,
   onTogglePause,
   onReset,
 }: GameViewProps) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const router = useRouter();
   const isHost = lobby.me?.isHost || false;
 
   return (
@@ -37,15 +37,7 @@ export function GameView({
         <header className="flex items-center justify-between mb-6">
           <div
             className="flex items-center gap-2"
-            onClick={() => {
-              if (
-                confirm(
-                  "Return to title screen? You will leave the current game."
-                )
-              ) {
-                router.push("/");
-              }
-            }}
+            onClick={onLeave}
           >
             <h1 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-500 tracking-tighter cursor-pointer animate-moving-gradient">
               SPYFALL
