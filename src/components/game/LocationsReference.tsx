@@ -21,7 +21,7 @@ export function LocationsReference({
         {Object.entries(gameData)
           .flatMap(([, locations]) => locations)
           .filter((loc) =>
-            (lobby.selectedLocations || []).includes(loc.location)
+            (lobby.selectedLocations || []).includes(loc.location),
           )
           .sort((a, b) => a.location.localeCompare(b.location))
           .map((loc) => (

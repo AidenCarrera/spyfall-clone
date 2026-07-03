@@ -37,10 +37,7 @@ export function GameView({
     <main className="min-h-screen p-4 bg-linear-to-b from-slate-900 to-slate-950 text-white">
       <div className="max-w-md mx-auto space-y-6">
         <header className="flex items-center justify-between mb-6">
-          <div
-            className="flex items-center gap-2"
-            onClick={onLeave}
-          >
+          <div className="flex items-center gap-2" onClick={onLeave}>
             <h1 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-500 tracking-tighter cursor-pointer animate-moving-gradient">
               SPYFALL
             </h1>
@@ -64,8 +61,8 @@ export function GameView({
                   isTimeUp
                     ? "text-red-500 animate-pulse"
                     : lobby.isPaused
-                    ? "text-yellow-400"
-                    : "text-blue-400"
+                      ? "text-yellow-400"
+                      : "text-blue-400"
                 }`}
               >
                 {isTimeUp ? "TIME'S UP!" : timeLeft}{" "}

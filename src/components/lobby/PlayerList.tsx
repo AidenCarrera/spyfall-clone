@@ -59,7 +59,7 @@ export function PlayerList({
                     onClick={async () => {
                       if (
                         confirm(
-                          `Are you sure you want to make ${p.name} the host? You will lose host privileges.`
+                          `Are you sure you want to make ${p.name} the host? You will lose host privileges.`,
                         )
                       ) {
                         setPendingPlayerId(p.id);
@@ -71,21 +71,22 @@ export function PlayerList({
                                   ...current,
                                   lobby: {
                                     ...current.lobby,
-                                    players: current.lobby.players.map((pl) => ({
-                                      ...pl,
-                                      isHost: pl.id === p.id,
-                                    })),
+                                    players: current.lobby.players.map(
+                                      (pl) => ({
+                                        ...pl,
+                                        isHost: pl.id === p.id,
+                                      }),
+                                    ),
                                     me: current.lobby.me
                                       ? {
                                           ...current.lobby.me,
-                                          isHost:
-                                            current.lobby.me.id === p.id,
+                                          isHost: current.lobby.me.id === p.id,
                                         }
                                       : undefined,
                                   },
                                 }
                               : current,
-                          { revalidate: false }
+                          { revalidate: false },
                         );
                         try {
                           await promoteHostAction(code, playerId, p.id);
@@ -113,12 +114,12 @@ export function PlayerList({
                                   lobby: {
                                     ...current.lobby,
                                     players: current.lobby.players.filter(
-                                      (pl) => pl.id !== p.id
+                                      (pl) => pl.id !== p.id,
                                     ),
                                   },
                                 }
                               : current,
-                          { revalidate: false }
+                          { revalidate: false },
                         );
                         try {
                           await kickPlayerAction(code, playerId, p.id);

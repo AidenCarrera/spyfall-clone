@@ -40,7 +40,7 @@ export function GameSettings({
                 // Optimistic update
                 await mutate(
                   { lobby: { ...lobby, timerDuration: newDuration } },
-                  { revalidate: false }
+                  { revalidate: false },
                 );
                 await updateSettingsAction(code, playerId, {
                   timerDuration: newDuration,
@@ -58,12 +58,12 @@ export function GameSettings({
               onClick={async () => {
                 const newDuration = Math.min(
                   60,
-                  (lobby.timerDuration || 8) + 1
+                  (lobby.timerDuration || 8) + 1,
                 );
                 // Optimistic update
                 await mutate(
                   { lobby: { ...lobby, timerDuration: newDuration } },
-                  { revalidate: false }
+                  { revalidate: false },
                 );
                 await updateSettingsAction(code, playerId, {
                   timerDuration: newDuration,
@@ -96,9 +96,11 @@ export function GameSettings({
                     // Optimistic update
                     await mutate(
                       { lobby: { ...lobby, spyCount: count } },
-                      { revalidate: false }
+                      { revalidate: false },
                     );
-                    await updateSettingsAction(code, playerId, { spyCount: count });
+                    await updateSettingsAction(code, playerId, {
+                      spyCount: count,
+                    });
                     mutate();
                   }}
                   className={`flex items-center gap-4 p-2 rounded transition-colors hover:bg-slate-800 cursor-pointer ${
@@ -187,7 +189,7 @@ export function GameSettings({
                       selectedLocations: newSelectedLocations,
                     },
                   },
-                  { revalidate: false }
+                  { revalidate: false },
                 );
 
                 await updateSettingsAction(code, playerId, {

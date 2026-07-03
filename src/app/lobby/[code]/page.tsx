@@ -209,7 +209,9 @@ export default function LobbyPage({
           timerAccumulated: undefined,
           isPaused: false,
           isSpy: undefined,
-          me: lobby!.me ? { ...lobby!.me, isSpy: undefined, role: undefined } : undefined,
+          me: lobby!.me
+            ? { ...lobby!.me, isSpy: undefined, role: undefined }
+            : undefined,
         },
       },
       { revalidate: false },

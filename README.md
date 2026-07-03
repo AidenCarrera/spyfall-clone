@@ -50,22 +50,27 @@ The goal of this project is to make playing Spyfall with friends quick and easy.
 ### Setup
 
 1. **Clone the project:**
+
    ```bash
    git clone https://github.com/AidenCarrera/spyfall-clone.git
    cd spyfall-clone
    ```
 
 2. **Install dependencies:**
+
    ```bash
    pnpm install
    ```
 
 3. **Configure Environment Variables:**
    Copy the example environment template:
+
    ```bash
    cp .env.example .env.local
    ```
+
    Add your Upstash Redis credentials to `.env.local`:
+
    ```env
    KV_REST_API_URL="your-redis-url"
    KV_REST_API_TOKEN="your-redis-token"

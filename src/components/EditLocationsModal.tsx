@@ -88,7 +88,7 @@ export function EditLocationsModal({
           {Object.entries(gameData).map(([setKey, locations]) => {
             const setLocationNames = locations.map((l) => l.location);
             const selectedCount = setLocationNames.filter((l) =>
-              localSelected.includes(l)
+              localSelected.includes(l),
             ).length;
 
             return (
@@ -168,6 +168,6 @@ export function EditLocationsModal({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

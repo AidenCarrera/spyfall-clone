@@ -13,14 +13,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+  ),
   title: "Spyfall",
-  description: "A modern, real-time web version of the popular party game Spyfall. Play with friends, no account required. Features mobile-friendly design, custom settings, and multiple locations.",
-  keywords: ["spyfall", "party game", "social deduction", "board game", "online game", "multiplayer", "spy game"],
+  description:
+    "A modern, real-time web version of the popular party game Spyfall. Play with friends, no account required. Features mobile-friendly design, custom settings, and multiple locations.",
+  keywords: [
+    "spyfall",
+    "party game",
+    "social deduction",
+    "board game",
+    "online game",
+    "multiplayer",
+    "spy game",
+  ],
   authors: [{ name: "Spyfall Clone" }],
   openGraph: {
     title: "Spyfall - Deceive Your Friends, Find the Spy",
-    description: "Play Spyfall online with friends. The spy must guess the location while others must identify the spy. No download required.",
+    description:
+      "Play Spyfall online with friends. The spy must guess the location while others must identify the spy. No download required.",
     type: "website",
     locale: "en_US",
     siteName: "Spyfall Clone",
@@ -28,7 +40,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Spyfall - Deceive Your Friends, Find the Spy",
-    description: "Play Spyfall online with friends. The spy must guess the location while others must identify the spy.",
+    description:
+      "Play Spyfall online with friends. The spy must guess the location while others must identify the spy.",
   },
 };
 
@@ -58,7 +71,8 @@ export default function RootLayout({
               "@type": "WebSite",
               name: "Spyfall Clone",
               url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
-              description: "A modern, real-time web version of the popular party game Spyfall.",
+              description:
+                "A modern, real-time web version of the popular party game Spyfall.",
               potentialAction: {
                 "@type": "SearchAction",
                 target: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/?q={search_term_string}`,
