@@ -16,3 +16,19 @@ body {
   font-family: var(--font-sans), sans-serif;
   min-height: 100vh;
 }
+
+.animate-moving-gradient {
+  background-image: linear-gradient(to right, #60a5fa, #a855f7, #60a5fa);
+  background-size: 200% auto;
+  animation: moving-gradient 16s linear infinite;
+}
+
+@keyframes moving-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
+}
+

@@ -47,7 +47,7 @@ export function GameView({
               }
             }}
           >
-            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-500 tracking-tighter cursor-pointer">
+            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-500 tracking-tighter cursor-pointer animate-moving-gradient">
               SPYFALL
             </h1>
           </div>
