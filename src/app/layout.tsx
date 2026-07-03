@@ -52,6 +52,9 @@ export const metadata: Metadata = {
       "Play Spyfall online with friends. The spy must guess the location while others must identify the spy.",
     images: ["/og-image.png"],
   },
+  verification: {
+    google: "ivXP4BMnsO5q10Rcb1-RDmAgpQmwBQR-d4ckfFDQB9c",
+  },
 };
 
 export const viewport: Viewport = {
