@@ -27,6 +27,10 @@ export default function LobbyPage({
   const [isStarting, setIsStarting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
+  // Tab visibility and leaving states to reduce polling
+  const [isTabVisible, setIsTabVisible] = useState(true);
+  const [isLeaving, setIsLeaving] = useState(false);
+
   // Timer state
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
 
@@ -35,19 +39,45 @@ export default function LobbyPage({
   const serverOffsetRef = useRef<number>(0);
   const isOffsetSet = useRef(false);
 
+  // Listen to visibilitychange event to stop polling when window/tab is hidden
+  useEffect(() => {
+    if (typeof window === "undefined" || !("visibilityState" in document))
+      return;
+    const handleVisibilityChange = () => {
+      setIsTabVisible(document.visibilityState === "visible");
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   // SWR Data Fetching
-  // Configured with a 2-second refresh interval to optimize Redis command usage
   const {
     data: lobbyData,
     error: lobbyError,
     mutate,
   } = useSWR(
-    playerId ? ["lobby", code, playerId] : null,
+    playerId && !isLeaving ? ["lobby", code, playerId] : null,
     ([, c, pid]) => getLobbyStateAction(c, pid),
     {
-      refreshInterval: 2000,
+      refreshInterval: (latestData) => {
+        const isKicked =
+          lobbyError === "Player not found in lobby" ||
+          latestData?.error === "Player not found in lobby";
+
+        if (!isTabVisible || isLeaving || isKicked) {
+          return 0;
+        }
+
+        const lobbyStatus = latestData?.lobby?.status;
+        if (lobbyStatus === "IN_PROGRESS") {
+          return 2000; // Poll every 2 seconds during active game
+        }
+        return 4000; // Poll every 4 seconds in lobby
+      },
       revalidateOnFocus: true,
-      dedupingInterval: 1000,
+      dedupingInterval: 2000,
     },
   );
 
@@ -185,9 +215,14 @@ export default function LobbyPage({
   };
 
   const handleLeave = async () => {
-    if (!confirm("Are you sure you want to leave the game?")) return;
+    if (!confirm("Are you sure you want to leave the lobby?")) return;
+    setIsLeaving(true);
     if (playerId) {
-      await leaveLobbyAction(code, playerId);
+      try {
+        await leaveLobbyAction(code, playerId);
+      } catch (e) {
+        console.error("Error leaving lobby:", e);
+      }
       localStorage.removeItem(`spyfall_pid_${code}`);
       router.push("/");
     }
