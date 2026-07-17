@@ -174,9 +174,9 @@ export default function LobbyPage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
         Loading...
-      </div>
+      </main>
     );
   }
 
@@ -184,7 +184,7 @@ export default function LobbyPage({
     const isKicked = error === "Player not found in lobby";
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
         <Card title={isKicked ? "Kicked" : "Error"}>
           <div className="flex flex-col items-center text-center space-y-4">
             {isKicked ? (
@@ -205,7 +205,7 @@ export default function LobbyPage({
             </Button>
           </div>
         </Card>
-      </div>
+      </main>
     );
   }
 
