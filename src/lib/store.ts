@@ -46,6 +46,13 @@ const saveLobby = async (code: string, lobby: Lobby) => {
   await redis.set(getLobbyKey(code), lobby, { ex: LOBBY_TTL });
 };
 
+const getLobby = async (code: string): Promise<Lobby | undefined> => {
+  const lobby = await redis.getex<Lobby>(getLobbyKey(code), {
+    ex: LOBBY_TTL,
+  });
+  return lobby || undefined;
+};
+
 type UpdateResult =
   | { success: false; reason: "not_found" }
   | { success: false; reason: "rejected" }
@@ -55,7 +62,7 @@ const updateLobby = async (
   code: string,
   updater: (lobby: Lobby) => void | boolean | Promise<void | boolean>,
 ): Promise<UpdateResult> => {
-  const lobby = await store.getLobby(code);
+  const lobby = await getLobby(code);
   if (!lobby) return { success: false, reason: "not_found" };
 
   const result = await updater(lobby);
@@ -70,31 +77,7 @@ const updateLobby = async (
   return { success: true, lobby };
 };
 
-interface Store {
-  createLobby: (hostName: string) => Promise<Lobby>;
-  joinLobby: (
-    code: string,
-    playerName: string,
-  ) => Promise<{ lobby?: Lobby; error?: string; playerId?: string }>;
-  getLobby: (code: string) => Promise<Lobby | undefined>;
-  leaveLobby: (code: string, playerId: string) => Promise<void>;
-  startGame: (code: string, hostId: string) => Promise<void>;
-  togglePause: (code: string, hostId: string) => Promise<void>;
-  resetGame: (code: string, hostId: string) => Promise<void>;
-  promoteHost: (
-    code: string,
-    hostId: string,
-    newHostId: string,
-  ) => Promise<void>;
-  kickPlayer: (code: string, hostId: string, playerId: string) => Promise<void>;
-  updateSettings: (
-    code: string,
-    hostId: string,
-    settings: Partial<GameSettings>,
-  ) => Promise<void>;
-}
-
-export const store: Store = {
+export const store = {
   createLobby: async (hostName: string): Promise<Lobby> => {
     const host: Player = {
       id: crypto.randomUUID(),
@@ -135,7 +118,7 @@ export const store: Store = {
   joinLobby: async (
     code: string,
     playerName: string,
-  ): Promise<{ lobby?: Lobby; error?: string; playerId?: string }> => {
+  ): Promise<{ lobby: Lobby; playerId: string } | { error: string }> => {
     let playerId: string | undefined;
     let joinError: string | undefined;
 
@@ -171,21 +154,17 @@ export const store: Store = {
 
     if (!result.success) {
       if (result.reason === "not_found") return { error: "Lobby not found" };
-      return { error: joinError };
+      return { error: joinError || "Unable to join lobby" };
     }
 
+    if (!playerId) return { error: "Failed to create player" };
     return { lobby: result.lobby, playerId };
   },
 
-  getLobby: async (code: string): Promise<Lobby | undefined> => {
-    const lobby = await redis.getex<Lobby>(getLobbyKey(code), {
-      ex: LOBBY_TTL,
-    });
-    return lobby || undefined;
-  },
+  getLobby,
 
   leaveLobby: async (code: string, playerId: string) => {
-    await updateLobby(code, (lobby) => {
+    return updateLobby(code, (lobby) => {
       lobby.players = lobby.players.filter((p) => p.id !== playerId);
 
       // If host leaves, assign new host
@@ -197,7 +176,7 @@ export const store: Store = {
   },
 
   startGame: async (code: string, hostId: string) => {
-    await updateLobby(code, (lobby) => {
+    return updateLobby(code, (lobby) => {
       const caller = lobby.players.find((p) => p.id === hostId);
       if (!caller?.isHost) return false;
 
@@ -272,7 +251,7 @@ export const store: Store = {
   },
 
   togglePause: async (code: string, hostId: string) => {
-    await updateLobby(code, (lobby) => {
+    return updateLobby(code, (lobby) => {
       const caller = lobby.players.find((p) => p.id === hostId);
       if (!caller?.isHost) return false;
 
@@ -294,7 +273,7 @@ export const store: Store = {
   },
 
   resetGame: async (code: string, hostId: string) => {
-    await updateLobby(code, (lobby) => {
+    return updateLobby(code, (lobby) => {
       const caller = lobby.players.find((p) => p.id === hostId);
       if (!caller?.isHost) return false;
 
@@ -311,7 +290,7 @@ export const store: Store = {
   },
 
   promoteHost: async (code: string, hostId: string, newHostId: string) => {
-    await updateLobby(code, (lobby) => {
+    return updateLobby(code, (lobby) => {
       const caller = lobby.players.find((p) => p.id === hostId);
       if (!caller?.isHost) return false;
 
@@ -327,7 +306,7 @@ export const store: Store = {
   },
 
   kickPlayer: async (code: string, hostId: string, playerId: string) => {
-    await updateLobby(code, (lobby) => {
+    return updateLobby(code, (lobby) => {
       const caller = lobby.players.find((p) => p.id === hostId);
       if (!caller?.isHost) return false;
 
@@ -340,7 +319,7 @@ export const store: Store = {
     hostId: string,
     settings: Partial<GameSettings>,
   ) => {
-    await updateLobby(code, (lobby) => {
+    return updateLobby(code, (lobby) => {
       const caller = lobby.players.find((p) => p.id === hostId);
       if (!caller?.isHost) return false;
 

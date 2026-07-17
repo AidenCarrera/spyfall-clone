@@ -1,6 +1,6 @@
 "use client";
 
-import { ClientLobbyState } from "@/src/app/actions";
+import type { ClientLobbyState } from "@/src/app/actions";
 import gameData from "@/src/lib/game-data.json";
 
 interface LocationsReferenceProps {
@@ -20,9 +20,7 @@ export function LocationsReference({
       <div className="grid grid-cols-2 gap-1">
         {Object.entries(gameData)
           .flatMap(([, locations]) => locations)
-          .filter((loc) =>
-            (lobby.selectedLocations || []).includes(loc.location),
-          )
+          .filter((loc) => lobby.selectedLocations.includes(loc.location))
           .sort((a, b) => a.location.localeCompare(b.location))
           .map((loc) => (
             <div
@@ -31,7 +29,7 @@ export function LocationsReference({
                             ${
                               lobby.location === loc.location &&
                               isRevealed &&
-                              !lobby.me?.isSpy
+                              !lobby.me.isSpy
                                 ? "bg-blue-900/30 text-blue-200 border border-blue-500/30"
                                 : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                             }`}

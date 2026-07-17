@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { KeyedMutator } from "swr";
+import type { KeyedMutator } from "swr";
 import { Card } from "@/src/components/Card";
 import {
-  ClientLobbyState,
   kickPlayerAction,
   promoteHostAction,
+  type ClientLobbyState,
 } from "@/src/app/actions";
 
 interface PlayerListProps {
@@ -77,12 +77,10 @@ export function PlayerList({
                                         isHost: pl.id === p.id,
                                       }),
                                     ),
-                                    me: current.lobby.me
-                                      ? {
-                                          ...current.lobby.me,
-                                          isHost: current.lobby.me.id === p.id,
-                                        }
-                                      : undefined,
+                                    me: {
+                                      ...current.lobby.me,
+                                      isHost: current.lobby.me.id === p.id,
+                                    },
                                   },
                                 }
                               : current,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, use } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import {
@@ -14,6 +14,7 @@ import { Card } from "@/src/components/Card";
 import { Button } from "@/src/components/Button";
 import { LobbyView } from "@/src/components/lobby/LobbyView";
 import { GameView } from "@/src/components/game/GameView";
+import { useGameTimer } from "@/src/hooks/useGameTimer";
 
 export default function LobbyPage({
   params,
@@ -23,21 +24,12 @@ export default function LobbyPage({
   const { code } = use(params);
   const router = useRouter();
   const [playerId, setPlayerId] = useState<string | null>(null);
-  const [isRevealed, setIsRevealed] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   // Tab visibility and leaving states to reduce polling
   const [isTabVisible, setIsTabVisible] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
-
-  // Timer state
-  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
-
-  // Reference to store the time difference between client and server
-  // Ensures timer accuracy regardless of client system clock deviations
-  const serverOffsetRef = useRef<number>(0);
-  const isOffsetSet = useRef(false);
 
   // Listen to visibilitychange event to stop polling when window/tab is hidden
   useEffect(() => {
@@ -84,6 +76,7 @@ export default function LobbyPage({
   const lobby = lobbyData?.lobby;
   const error = lobbyError || lobbyData?.error;
   const isLoading = !lobbyData && !lobbyError;
+  const { timeLeft, isTimeUp } = useGameTimer(lobby);
 
   // Initial setup (Hydration)
   useEffect(() => {
@@ -99,104 +92,9 @@ export default function LobbyPage({
     }
   }, [code, router, playerId]);
 
-  // Handle side effects of lobby state changes
-  const [prevStatus, setPrevStatus] = useState(lobby?.status);
-
-  if (lobby && prevStatus !== lobby.status) {
-    setPrevStatus(lobby.status);
-    if (lobby.status === "LOBBY" && isRevealed) {
-      setIsRevealed(false);
-    }
-  }
-
-  // Synchronize Client-Server Clock Offset
-  useEffect(() => {
-    if (!lobby?.serverTime) return;
-
-    // Calculate offset: Server Time - Client Time
-    const now = Date.now();
-    const newOffset = lobby.serverTime - now;
-
-    // Update offset only on initialization or if significant drift (>1000ms) is detected.
-    // This threshold prevents minor network jitter from causing unnecessary updates.
-    if (
-      !isOffsetSet.current ||
-      Math.abs(serverOffsetRef.current - newOffset) > 1000
-    ) {
-      serverOffsetRef.current = newOffset;
-      isOffsetSet.current = true;
-    }
-  }, [lobby?.serverTime]);
-
-  // High-Frequency Timer Update
-  // Updates the UI every 100ms for smooth rendering without additional data fetching.
-  // Time is calculated using absolute timestamps: (Start + Duration) - (Now + Offset)
-  useEffect(() => {
-    if (lobby?.status !== "IN_PROGRESS" || !lobby?.timerDuration) {
-      return;
-    }
-
-    const tick = () => {
-      // Paused State: Display static remaining time based on accumulated duration
-      if (lobby.isPaused) {
-        const totalDurationMs = lobby.timerDuration! * 60 * 1000;
-        const elapsedMs = lobby.timerAccumulated || 0;
-        const remaining = Math.max(
-          0,
-          Math.ceil((totalDurationMs - elapsedMs) / 1000),
-        );
-        setSecondsRemaining(remaining);
-        return;
-      }
-
-      // Active State: Calculate remaining time using synchronized server time
-      if (lobby.timerStartTime) {
-        const now = Date.now();
-        const adjustedNow = now + serverOffsetRef.current;
-
-        // Calculate elapsed time: (Current - Start) + Accumulated
-        const currentSegment = adjustedNow - lobby.timerStartTime;
-        const totalElapsed = currentSegment + (lobby.timerAccumulated || 0);
-
-        const totalDurationMs = lobby.timerDuration! * 60 * 1000;
-        const remainingMs = totalDurationMs - totalElapsed;
-
-        setSecondsRemaining(Math.max(0, Math.ceil(remainingMs / 1000)));
-      }
-    };
-
-    // Initial update
-    tick();
-
-    // Update UI every 100ms to prevent visual skipping of seconds
-    const interval = setInterval(tick, 100);
-    return () => clearInterval(interval);
-  }, [
-    lobby?.status,
-    lobby?.timerDuration,
-    lobby?.timerStartTime,
-    lobby?.isPaused,
-    lobby?.timerAccumulated,
-  ]);
-
-  // Derived display state
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
-
-  const isGameInProgress = lobby?.status === "IN_PROGRESS";
-  const timeLeft =
-    isGameInProgress && secondsRemaining !== null
-      ? formatTime(secondsRemaining)
-      : "";
-  const isTimeUp =
-    isGameInProgress && secondsRemaining !== null && secondsRemaining === 0;
-
   const handleStartGame = async () => {
     if (!lobby) return;
-    if (lobby.players.length === 3 && (lobby.spyCount || 1) === 2) {
+    if (lobby.players.length === 3 && lobby.spyCount === 2) {
       if (
         !confirm(
           "Starting with 2 spies and only 3 players is not recommended. Are you sure you want to proceed?",
@@ -205,7 +103,6 @@ export default function LobbyPage({
         return;
     }
     setIsStarting(true);
-    setIsRevealed(false);
     try {
       await startGameAction(code, playerId!);
       mutate();
@@ -232,7 +129,6 @@ export default function LobbyPage({
     if (!isTimeUp && !confirm("Are you sure you want to end the game early?"))
       return;
     setIsResetting(true);
-    setIsRevealed(false);
     // Optimistic update: immediately return to lobby view
     await mutate(
       {
@@ -243,9 +139,7 @@ export default function LobbyPage({
           timerStartTime: undefined,
           timerAccumulated: undefined,
           isPaused: false,
-          me: lobby!.me
-            ? { ...lobby!.me, isSpy: undefined, role: undefined }
-            : undefined,
+          me: { ...lobby!.me, isSpy: undefined, role: undefined },
         },
       },
       { revalidate: false },
@@ -273,7 +167,7 @@ export default function LobbyPage({
         ? now - lobby.timerStartTime
         : 0;
       updatedLobby.timerAccumulated =
-        (lobby.timerAccumulated || 0) + currentSegment;
+        (lobby.timerAccumulated ?? 0) + currentSegment;
       updatedLobby.timerStartTime = undefined;
     } else {
       // Resuming
@@ -345,8 +239,6 @@ export default function LobbyPage({
   return (
     <GameView
       lobby={lobby}
-      isRevealed={isRevealed}
-      setIsRevealed={setIsRevealed}
       timeLeft={timeLeft}
       isTimeUp={isTimeUp}
       onLeave={handleLeave}

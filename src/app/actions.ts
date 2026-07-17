@@ -1,6 +1,6 @@
 "use server";
 
-import { store, type Player } from "@/src/lib/store";
+import { store, type GameStatus, type Player } from "@/src/lib/store";
 import { checkRateLimit } from "@/src/lib/ratelimit";
 import { z } from "zod";
 import { headers } from "next/headers";
@@ -40,6 +40,29 @@ const UpdateSettingsSchema = z
     selectedLocations: z.array(z.string()).min(1).optional(),
   })
   .strict();
+
+type MutationResult =
+  { success: true } | { success: false; reason: "not_found" | "rejected" };
+
+async function runMutationAction(
+  actionName: string,
+  errorMessage: string,
+  mutation: () => Promise<MutationResult>,
+) {
+  try {
+    const result = await mutation();
+    if (!result.success) {
+      return {
+        error:
+          result.reason === "not_found" ? "Lobby not found." : errorMessage,
+      };
+    }
+    return { success: true as const };
+  } catch (error) {
+    console.error(`${actionName} error:`, error);
+    return { error: errorMessage };
+  }
+}
 
 export async function createLobbyAction(hostName: string) {
   try {
@@ -83,8 +106,8 @@ export async function joinLobbyAction(code: string, playerName: string) {
       result.data.code,
       result.data.playerName,
     );
-    if (joinResult.error) return { error: joinResult.error };
-    return { code: joinResult.lobby!.code, playerId: joinResult.playerId };
+    if ("error" in joinResult) return { error: joinResult.error };
+    return { code: joinResult.lobby.code, playerId: joinResult.playerId };
   } catch (error) {
     console.error("joinLobbyAction error:", error);
     return {
@@ -94,13 +117,9 @@ export async function joinLobbyAction(code: string, playerName: string) {
 }
 
 export async function leaveLobbyAction(code: string, playerId: string) {
-  try {
-    await store.leaveLobby(code, playerId);
-    return { success: true };
-  } catch (error) {
-    console.error("leaveLobbyAction error:", error);
-    return { error: "Failed to leave lobby." };
-  }
+  return runMutationAction("leaveLobbyAction", "Failed to leave lobby.", () =>
+    store.leaveLobby(code, playerId),
+  );
 }
 
 export async function kickPlayerAction(
@@ -108,33 +127,21 @@ export async function kickPlayerAction(
   hostId: string,
   playerId: string,
 ) {
-  try {
-    await store.kickPlayer(code, hostId, playerId);
-    return { success: true };
-  } catch (error) {
-    console.error("kickPlayerAction error:", error);
-    return { error: "Failed to kick player." };
-  }
+  return runMutationAction("kickPlayerAction", "Failed to kick player.", () =>
+    store.kickPlayer(code, hostId, playerId),
+  );
 }
 
 export async function startGameAction(code: string, hostId: string) {
-  try {
-    await store.startGame(code, hostId);
-    return { success: true };
-  } catch (error) {
-    console.error("startGameAction error:", error);
-    return { error: "Failed to start game." };
-  }
+  return runMutationAction("startGameAction", "Failed to start game.", () =>
+    store.startGame(code, hostId),
+  );
 }
 
 export async function resetGameAction(code: string, hostId: string) {
-  try {
-    await store.resetGame(code, hostId);
-    return { success: true };
-  } catch (error) {
-    console.error("resetGameAction error:", error);
-    return { error: "Failed to reset game." };
-  }
+  return runMutationAction("resetGameAction", "Failed to reset game.", () =>
+    store.resetGame(code, hostId),
+  );
 }
 
 export async function promoteHostAction(
@@ -142,13 +149,9 @@ export async function promoteHostAction(
   hostId: string,
   newHostId: string,
 ) {
-  try {
-    await store.promoteHost(code, hostId, newHostId);
-    return { success: true };
-  } catch (error) {
-    console.error("promoteHostAction error:", error);
-    return { error: "Failed to promote host." };
-  }
+  return runMutationAction("promoteHostAction", "Failed to promote host.", () =>
+    store.promoteHost(code, hostId, newHostId),
+  );
 }
 
 export async function updateSettingsAction(
@@ -160,42 +163,36 @@ export async function updateSettingsAction(
     selectedLocations?: string[];
   },
 ) {
-  try {
-    const parsed = UpdateSettingsSchema.safeParse(settings);
-    if (!parsed.success) {
-      return { error: parsed.error.issues[0]?.message || "Invalid settings" };
-    }
-
-    await store.updateSettings(code, hostId, parsed.data);
-    return { success: true };
-  } catch (error) {
-    console.error("updateSettingsAction error:", error);
-    return { error: "Failed to update settings." };
+  const parsed = UpdateSettingsSchema.safeParse(settings);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || "Invalid settings" };
   }
+
+  return runMutationAction(
+    "updateSettingsAction",
+    "Failed to update settings.",
+    () => store.updateSettings(code, hostId, parsed.data),
+  );
 }
 
 export async function togglePauseAction(code: string, hostId: string) {
-  try {
-    await store.togglePause(code, hostId);
-    return { success: true };
-  } catch (error) {
-    console.error("togglePauseAction error:", error);
-    return { error: "Failed to toggle pause." };
-  }
+  return runMutationAction("togglePauseAction", "Failed to toggle pause.", () =>
+    store.togglePause(code, hostId),
+  );
 }
 
 export interface ClientLobbyState {
   code: string;
   players: { name: string; isHost: boolean; id: string }[];
-  status: string;
-  me: Player | undefined;
+  status: GameStatus;
+  me: Player;
   location?: string;
   timerStartTime?: number;
   timerAccumulated?: number;
-  isPaused?: boolean;
-  timerDuration?: number;
-  spyCount?: number;
-  selectedLocations?: string[];
+  isPaused: boolean;
+  timerDuration: number;
+  spyCount: number;
+  selectedLocations: string[];
   serverTime: number;
 }
 

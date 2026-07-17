@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { KeyedMutator } from "swr";
+import type { KeyedMutator } from "swr";
 import { Button } from "@/src/components/Button";
+import { GameHeader } from "@/src/components/GameHeader";
 import { HelpModal } from "@/src/components/HelpModal";
 import { AccessCode } from "./AccessCode";
 import { GameSettings } from "./GameSettings";
 import { PlayerList } from "./PlayerList";
-import { ClientLobbyState } from "@/src/app/actions";
+import type { ClientLobbyState } from "@/src/app/actions";
 
 interface LobbyViewProps {
   code: string;
@@ -29,26 +30,16 @@ export function LobbyView({
   onLeave,
 }: LobbyViewProps) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const isHost = lobby.me?.isHost || false;
+  const isHost = lobby.me.isHost;
 
   return (
     <main className="min-h-screen p-4 bg-linear-to-b from-slate-900 to-slate-950 text-white">
       <div className="max-w-md mx-auto space-y-6">
-        <header className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2" onClick={onLeave}>
-            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-500 tracking-tighter cursor-pointer animate-moving-gradient">
-              SPYFALL
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsHelpOpen(true)}
-              className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded transition-colors"
-            >
-              Help
-            </button>
-          </div>
-        </header>
+        <GameHeader
+          onLeave={onLeave}
+          onHelp={() => setIsHelpOpen(true)}
+          className="mb-8"
+        />
 
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Lobby</h1>

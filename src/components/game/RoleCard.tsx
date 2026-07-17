@@ -2,7 +2,7 @@
 
 import { Card } from "@/src/components/Card";
 import { Button } from "@/src/components/Button";
-import { ClientLobbyState } from "@/src/app/actions";
+import type { ClientLobbyState } from "@/src/app/actions";
 
 interface RoleCardProps {
   lobby: ClientLobbyState;
@@ -22,12 +22,12 @@ export function RoleCard({ lobby, isRevealed, setIsRevealed }: RoleCardProps) {
           <div>
             <div className="space-y-2 bg-linear-to-b from-slate-800/50 to-slate-900/50 p-4 rounded-lg border border-slate-700/50">
               <p className="text-3xl font-bold text-white">
-                {lobby.me?.isSpy ? "Spy" : lobby.me?.role}
+                {lobby.me.isSpy ? "Spy" : lobby.me.role}
               </p>
               <div className="pt-2 border-t border-slate-700/50 mt-2">
                 <p className="text-slate-400 text-xs uppercase">Location</p>
                 <p className="text-2xl font-bold text-blue-400">
-                  {lobby.me?.isSpy ? "????" : lobby.location}
+                  {lobby.me.isSpy ? "????" : lobby.location}
                 </p>
               </div>
             </div>

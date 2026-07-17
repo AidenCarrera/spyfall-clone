@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Settings } from "lucide-react";
-import { KeyedMutator } from "swr";
+import type { KeyedMutator } from "swr";
 import { Card } from "@/src/components/Card";
 import { Button } from "@/src/components/Button";
 import { EditLocationsModal } from "@/src/components/EditLocationsModal";
-import { ClientLobbyState, updateSettingsAction } from "@/src/app/actions";
+import { updateSettingsAction, type ClientLobbyState } from "@/src/app/actions";
 import gameData from "@/src/lib/game-data.json";
 
 interface GameSettingsProps {
@@ -26,6 +26,22 @@ export function GameSettings({
   mutate,
 }: GameSettingsProps) {
   const [isEditLocationsOpen, setIsEditLocationsOpen] = useState(false);
+  const updateSettings = async (
+    settings: Parameters<typeof updateSettingsAction>[2],
+  ) => {
+    await mutate(
+      (current) =>
+        current?.lobby
+          ? {
+              ...current,
+              lobby: { ...current.lobby, ...settings },
+            }
+          : current,
+      { revalidate: false },
+    );
+    await updateSettingsAction(code, playerId, settings);
+    await mutate();
+  };
 
   return (
     <Card title="Game Settings">
@@ -36,39 +52,24 @@ export function GameSettings({
           <div className="flex items-center gap-1">
             <button
               onClick={async () => {
-                const newDuration = Math.max(1, (lobby.timerDuration || 8) - 1);
-                // Optimistic update
-                await mutate(
-                  { lobby: { ...lobby, timerDuration: newDuration } },
-                  { revalidate: false },
-                );
-                await updateSettingsAction(code, playerId, {
+                const newDuration = Math.max(1, lobby.timerDuration - 1);
+                await updateSettings({
                   timerDuration: newDuration,
                 });
-                mutate();
               }}
               className="w-8 h-8 bg-slate-700 rounded hover:bg-slate-600 flex items-center justify-center text-xl font-bold"
             >
               -
             </button>
             <span className="w-8 text-center font-mono text-xl text-blue-400">
-              {lobby.timerDuration || 8}
+              {lobby.timerDuration}
             </span>
             <button
               onClick={async () => {
-                const newDuration = Math.min(
-                  60,
-                  (lobby.timerDuration || 8) + 1,
-                );
-                // Optimistic update
-                await mutate(
-                  { lobby: { ...lobby, timerDuration: newDuration } },
-                  { revalidate: false },
-                );
-                await updateSettingsAction(code, playerId, {
+                const newDuration = Math.min(60, lobby.timerDuration + 1);
+                await updateSettings({
                   timerDuration: newDuration,
                 });
-                mutate();
               }}
               className="w-8 h-8 bg-slate-700 rounded hover:bg-slate-600 flex items-center justify-center text-xl font-bold"
             >
@@ -77,7 +78,7 @@ export function GameSettings({
           </div>
         ) : (
           <span className="font-mono text-xl text-blue-400">
-            {lobby.timerDuration || 8} min
+            {lobby.timerDuration} min
           </span>
         )}
       </div>
@@ -87,21 +88,15 @@ export function GameSettings({
         <label className="text-slate-400">Spies</label>
         <div className="flex items-center gap-2">
           {isHost ? (
-            [1, 2].map((count) => {
-              const isSelected = (lobby.spyCount || 1) === count;
+            ([1, 2] as const).map((count) => {
+              const isSelected = lobby.spyCount === count;
               return (
                 <button
                   key={count}
                   onClick={async () => {
-                    // Optimistic update
-                    await mutate(
-                      { lobby: { ...lobby, spyCount: count } },
-                      { revalidate: false },
-                    );
-                    await updateSettingsAction(code, playerId, {
+                    await updateSettings({
                       spyCount: count,
                     });
-                    mutate();
                   }}
                   className={`flex items-center gap-4 p-2 rounded transition-colors hover:bg-slate-800 cursor-pointer ${
                     !isSelected ? "opacity-50" : ""
@@ -129,7 +124,7 @@ export function GameSettings({
             })
           ) : (
             <div className="flex items-center gap-1 px-2 py-1">
-              {Array.from({ length: lobby.spyCount || 1 }).map((_, i) => (
+              {Array.from({ length: lobby.spyCount }).map((_, i) => (
                 <Image
                   key={i}
                   src="/Spy.png"
@@ -155,7 +150,7 @@ export function GameSettings({
                 : "font-mono text-xl text-blue-400"
             }
           >
-            {(lobby.selectedLocations || []).length} selected
+            {lobby.selectedLocations.length} selected
           </span>
         </div>
 
@@ -179,23 +174,11 @@ export function GameSettings({
                   { location: string; roles: string[] }[]
                 >
               }
-              selectedLocations={lobby.selectedLocations || []}
+              selectedLocations={lobby.selectedLocations}
               onUpdate={async (newSelectedLocations) => {
-                // Optimistic update
-                await mutate(
-                  {
-                    lobby: {
-                      ...lobby,
-                      selectedLocations: newSelectedLocations,
-                    },
-                  },
-                  { revalidate: false },
-                );
-
-                await updateSettingsAction(code, playerId, {
+                await updateSettings({
                   selectedLocations: newSelectedLocations,
                 });
-                mutate();
               }}
             />
           </>
