@@ -5,14 +5,15 @@ import Link from "next/link";
 import { Button } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
 import { HelpModal } from "@/src/components/HelpModal";
+import { SiteFooter } from "@/src/components/SiteFooter";
 
 export default function Home() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-slate-900 to-slate-950 px-4 py-12 sm:py-16">
-      <div className="mx-auto w-full max-w-5xl space-y-20">
-        <section className="mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-md flex-col justify-center space-y-8 text-center sm:min-h-[calc(100vh-8rem)]">
+    <main className="flex min-h-screen flex-col bg-linear-to-b from-slate-900 to-slate-950 px-4 py-6 sm:py-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 items-center justify-center">
+        <section className="mx-auto w-full max-w-md space-y-8 text-center">
           <div className="space-y-3">
             <h1 className="text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-500 animate-moving-gradient spyfall-glow sm:text-7xl">
               SPYFALL
@@ -59,6 +60,8 @@ export default function Home() {
           </p>
         </section>
       </div>
+
+      <SiteFooter compact />
 
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </main>

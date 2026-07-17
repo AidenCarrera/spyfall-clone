@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_DESCRIPTION } from "@/src/lib/site";
+import { SiteFooter } from "@/src/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "How to Play Spyfall - Rules, Setup, and Tips",
@@ -301,6 +302,7 @@ export default function HowToPlayPage() {
           </div>
         </section>
       </article>
+      <SiteFooter />
     </main>
   );
 }
