@@ -1,6 +1,6 @@
 "use server";
 
-import { store, Player } from "@/src/lib/store";
+import { store, type Player } from "@/src/lib/store";
 import { checkRateLimit } from "@/src/lib/ratelimit";
 import { z } from "zod";
 import { headers } from "next/headers";
@@ -196,7 +196,6 @@ export interface ClientLobbyState {
   timerDuration?: number;
   spyCount?: number;
   selectedLocations?: string[];
-  isSpy?: boolean;
   serverTime: number;
 }
 
@@ -231,10 +230,7 @@ export async function getLobbyStateAction(
     };
 
     if (lobby.status === "IN_PROGRESS") {
-      if (me.isSpy) {
-        clientLobby.isSpy = true;
-      } else {
-        clientLobby.isSpy = false;
+      if (!me.isSpy) {
         clientLobby.location = lobby.location;
       }
     }

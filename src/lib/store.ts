@@ -1,9 +1,6 @@
 import { redis } from "./redis";
 import gameData from "./game-data.json";
 
-export type Role = string;
-export type Location = string;
-
 export interface Player {
   id: string;
   name: string;
@@ -16,7 +13,6 @@ export type GameStatus = "LOBBY" | "IN_PROGRESS";
 
 export interface GameSettings {
   selectedLocations: string[];
-  timerEnabled: boolean;
   timerDuration: number; // in minutes
   spyCount: number;
 }
@@ -41,8 +37,8 @@ function generateCode(length: number = 6): string {
   return result;
 }
 
-export const LOBBY_TTL = 86400; // 24 hours in seconds
-export const MAX_PLAYERS = 12;
+const LOBBY_TTL = 86400; // 24 hours in seconds
+const MAX_PLAYERS = 12;
 
 const getLobbyKey = (code: string) => `lobby:${code.toUpperCase()}`;
 
@@ -50,7 +46,7 @@ const saveLobby = async (code: string, lobby: Lobby) => {
   await redis.set(getLobbyKey(code), lobby, { ex: LOBBY_TTL });
 };
 
-export type UpdateResult =
+type UpdateResult =
   | { success: false; reason: "not_found" }
   | { success: false; reason: "rejected" }
   | { success: true; lobby: Lobby };
@@ -74,7 +70,7 @@ const updateLobby = async (
   return { success: true, lobby };
 };
 
-export interface Store {
+interface Store {
   createLobby: (hostName: string) => Promise<Lobby>;
   joinLobby: (
     code: string,
@@ -118,7 +114,6 @@ export const store: Store = {
         isPaused: false,
         settings: {
           selectedLocations: gameData.spyfall1.map((l) => l.location),
-          timerEnabled: false,
           timerDuration: 8,
           spyCount: 1,
         },
@@ -264,7 +259,7 @@ export const store: Store = {
 
         if (spiesAssigned < spyCount) {
           originalPlayer.isSpy = true;
-          originalPlayer.role = "Spy";
+          originalPlayer.role = undefined;
           spiesAssigned++;
         } else {
           originalPlayer.isSpy = false;

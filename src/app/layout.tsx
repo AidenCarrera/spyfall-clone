@@ -85,11 +85,6 @@ export default function RootLayout({
               url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
               description:
                 "A modern, real-time web version of the popular party game Spyfall.",
-              potentialAction: {
-                "@type": "SearchAction",
-                target: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/?q={search_term_string}`,
-                "query-input": "required name=search_term_string",
-              },
             }),
           }}
         />

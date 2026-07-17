@@ -49,9 +49,9 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           <div className="space-y-2">
             <p>
               <strong className="text-white">Spyfall</strong> is a social
-              deduction game where one player is the spy and doesn't know the
+              deduction game where one player is the spy and doesn&apos;t know the
               location. Everyone else sees the location and has a role. The
-              spy's goal is to figure out the location without being caught;
+              spy&apos;s goal is to figure out the location without being caught;
               non-spies try to identify the spy.
             </p>
           </div>
@@ -89,7 +89,9 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-white">4. Spy's Guess</h3>
+            <h3 className="text-lg font-semibold text-white">
+              4. Spy&apos;s Guess
+            </h3>
             <p>At any point, the spy can attempt to guess the location.</p>
             <ul className="list-disc list-inside space-y-1 pl-2 font-medium">
               <li className="text-green-400">Correct guess &rarr; spy wins</li>

@@ -18,29 +18,43 @@ export function EditLocationsModal({
   selectedLocations,
   onUpdate,
 }: EditLocationsModalProps) {
-  const [localSelected, setLocalSelected] = useState<string[]>([]);
+  if (!isOpen) return null;
+
+  return (
+    <EditLocationsModalContent
+      onClose={onClose}
+      gameData={gameData}
+      selectedLocations={selectedLocations}
+      onUpdate={onUpdate}
+    />
+  );
+}
+
+type EditLocationsModalContentProps = Omit<
+  EditLocationsModalProps,
+  "isOpen"
+>;
+
+function EditLocationsModalContent({
+  onClose,
+  gameData,
+  selectedLocations,
+  onUpdate,
+}: EditLocationsModalContentProps) {
+  const [localSelected, setLocalSelected] = useState<string[]>(() =>
+    selectedLocations.length > 0
+      ? selectedLocations
+      : (gameData.spyfall1?.map((location) => location.location) ?? []),
+  );
 
   useEffect(() => {
-    if (isOpen) {
-      // If selectedLocations is empty (e.g. first load), default to all Spyfall 1
-      if (!selectedLocations || selectedLocations.length === 0) {
-        const spyfall1Locations =
-          gameData.spyfall1?.map((l) => l.location) || [];
-        setLocalSelected(spyfall1Locations);
-      } else {
-        setLocalSelected(selectedLocations);
-      }
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
-  if (!isOpen) return null;
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   const handleToggleLocation = (location: string) => {
     setLocalSelected((prev) => {
@@ -119,7 +133,7 @@ export function EditLocationsModal({
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {locations
+                  {[...locations]
                     .sort((a, b) => a.location.localeCompare(b.location))
                     .map((loc) => {
                       const isSelected = localSelected.includes(loc.location);

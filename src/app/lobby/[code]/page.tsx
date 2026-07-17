@@ -243,7 +243,6 @@ export default function LobbyPage({
           timerStartTime: undefined,
           timerAccumulated: undefined,
           isPaused: false,
-          isSpy: undefined,
           me: lobby!.me
             ? { ...lobby!.me, isSpy: undefined, role: undefined }
             : undefined,

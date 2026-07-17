@@ -31,7 +31,7 @@ export function LocationsReference({
                             ${
                               lobby.location === loc.location &&
                               isRevealed &&
-                              !lobby.isSpy
+                              !lobby.me?.isSpy
                                 ? "bg-blue-900/30 text-blue-200 border border-blue-500/30"
                                 : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                             }`}

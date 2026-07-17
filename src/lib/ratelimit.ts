@@ -2,7 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "./redis";
 
 // Create a new ratelimiter, that allows 5 requests per 60 seconds
-export const createLobbyRatelimit = new Ratelimit({
+const createLobbyRatelimit = new Ratelimit({
   redis: redis,
   limiter: Ratelimit.slidingWindow(5, "60 s"),
   analytics: true,
@@ -10,7 +10,7 @@ export const createLobbyRatelimit = new Ratelimit({
 });
 
 // Create a new ratelimiter, that allows 10 requests per 60 seconds
-export const joinLobbyRatelimit = new Ratelimit({
+const joinLobbyRatelimit = new Ratelimit({
   redis: redis,
   limiter: Ratelimit.slidingWindow(10, "60 s"),
   analytics: true,
