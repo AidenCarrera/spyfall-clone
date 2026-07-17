@@ -5,7 +5,7 @@ import { checkRateLimit } from "@/src/lib/ratelimit";
 import { z } from "zod";
 import { headers } from "next/headers";
 
-// Get client IP for rate limiting
+// Use the trusted proxy's final forwarded address for rate limiting.
 async function getClientIp(): Promise<string> {
   const h = await headers();
   const xff = h.get("x-forwarded-for");
@@ -78,7 +78,6 @@ export async function createLobbyAction(hostName: string) {
     }
 
     const lobby = await store.createLobby(result.data.hostName);
-    // Return the host's player ID (it's the first player)
     if (!lobby.players[0]) {
       throw new Error("Host player creation failed");
     }
@@ -207,7 +206,7 @@ export async function getLobbyStateAction(
     const me = lobby.players.find((p) => p.id === playerId);
     if (!me) return { error: "Player not found in lobby" };
 
-    // Sanitize data
+    // Expose public player fields and only the caller's private role data.
     const clientLobby: ClientLobbyState = {
       code: lobby.code,
       players: lobby.players.map((p) => ({
@@ -227,6 +226,7 @@ export async function getLobbyStateAction(
     };
 
     if (lobby.status === "IN_PROGRESS") {
+      // Spies must never receive the secret location.
       if (!me.isSpy) {
         clientLobby.location = lobby.location;
       }

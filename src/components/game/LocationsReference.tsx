@@ -32,9 +32,9 @@ export function LocationsReference({
                               !lobby.me.isSpy
                                 ? "bg-blue-900/30 text-blue-200 border border-blue-500/30"
                                 : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                            }`}
+              }`}
               onClick={(e) => {
-                // Simple toggle for crossing off
+                // Crossed-off locations are intentionally local to this device.
                 e.currentTarget.classList.toggle("line-through");
                 e.currentTarget.classList.toggle("opacity-50");
                 e.currentTarget.classList.toggle("bg-black");

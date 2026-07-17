@@ -45,7 +45,6 @@ export function GameSettings({
 
   return (
     <Card title="Game Settings">
-      {/* Timer Duration */}
       <div className="flex items-center justify-between">
         <label className="text-slate-400">Timer Duration (mins)</label>
         {isHost ? (
@@ -83,7 +82,6 @@ export function GameSettings({
         )}
       </div>
 
-      {/* Spies */}
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700/50">
         <label className="text-slate-400">Spies</label>
         <div className="flex items-center gap-2">
@@ -139,7 +137,6 @@ export function GameSettings({
         </div>
       </div>
 
-      {/* Locations */}
       <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-700/50">
         <div className="flex items-center justify-between">
           <label className="text-slate-400">Locations</label>

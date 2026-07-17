@@ -18,7 +18,6 @@ function JoinLobbyContent() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // Check for existing session
   useEffect(() => {
     if (urlCode) {
       const existingPid = localStorage.getItem(`spyfall_pid_${urlCode}`);
@@ -35,7 +34,6 @@ function JoinLobbyContent() {
       return;
     }
 
-    // Check for existing session before joining
     const existingPid = localStorage.getItem(`spyfall_pid_${code.trim()}`);
     if (existingPid) {
       router.push(`/lobby/${code.trim()}`);

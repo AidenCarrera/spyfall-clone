@@ -27,11 +27,9 @@ export default function LobbyPage({
   const [isStarting, setIsStarting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Tab visibility and leaving states to reduce polling
   const [isTabVisible, setIsTabVisible] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  // Listen to visibilitychange event to stop polling when window/tab is hidden
   useEffect(() => {
     if (typeof window === "undefined" || !("visibilityState" in document))
       return;
@@ -44,7 +42,6 @@ export default function LobbyPage({
     };
   }, []);
 
-  // SWR Data Fetching
   const {
     data: lobbyData,
     error: lobbyError,
@@ -78,7 +75,6 @@ export default function LobbyPage({
   const isLoading = !lobbyData && !lobbyError;
   const { timeLeft, isTimeUp } = useGameTimer(lobby);
 
-  // Initial setup (Hydration)
   useEffect(() => {
     const storedPid = localStorage.getItem(`spyfall_pid_${code}`);
     if (!storedPid) {
@@ -86,8 +82,7 @@ export default function LobbyPage({
       return;
     }
     if (storedPid !== playerId) {
-      // Sync state with session storage
-      // eslint-disable-next-line
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate browser-only local storage after mount.
       setPlayerId(storedPid);
     }
   }, [code, router, playerId]);
@@ -129,7 +124,7 @@ export default function LobbyPage({
     if (!isTimeUp && !confirm("Are you sure you want to end the game early?"))
       return;
     setIsResetting(true);
-    // Optimistic update: immediately return to lobby view
+    // Return to the lobby immediately while the server resets the game.
     await mutate(
       {
         lobby: {
@@ -155,14 +150,12 @@ export default function LobbyPage({
   const handleTogglePause = async () => {
     if (!lobby) return;
 
-    // Optimistic update
     const now = Date.now();
     const newIsPaused = !lobby.isPaused;
 
     const updatedLobby = { ...lobby, isPaused: newIsPaused };
 
     if (newIsPaused) {
-      // Pausing
       const currentSegment = lobby.timerStartTime
         ? now - lobby.timerStartTime
         : 0;
@@ -170,11 +163,9 @@ export default function LobbyPage({
         (lobby.timerAccumulated ?? 0) + currentSegment;
       updatedLobby.timerStartTime = undefined;
     } else {
-      // Resuming
       updatedLobby.timerStartTime = now;
     }
 
-    // Apply optimistic update
     await mutate({ lobby: updatedLobby }, { revalidate: false });
 
     await togglePauseAction(code, playerId!);
@@ -220,7 +211,6 @@ export default function LobbyPage({
 
   if (!lobby) return null;
 
-  // LOBBY VIEW
   if (lobby.status === "LOBBY") {
     return (
       <LobbyView
@@ -235,7 +225,6 @@ export default function LobbyPage({
     );
   }
 
-  // GAME VIEW
   return (
     <GameView
       lobby={lobby}

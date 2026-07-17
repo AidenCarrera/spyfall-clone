@@ -63,7 +63,7 @@ export function PlayerList({
                         )
                       ) {
                         setPendingPlayerId(p.id);
-                        // Optimistic: swap host flag immediately
+                        // Revalidation reconciles this immediate host transfer.
                         await mutate(
                           (current) =>
                             current?.lobby
@@ -103,7 +103,7 @@ export function PlayerList({
                     onClick={async () => {
                       if (confirm(`Are you sure you want to kick ${p.name}?`)) {
                         setPendingPlayerId(p.id);
-                        // Optimistic: remove player from list immediately
+                        // Revalidation reconciles this immediate removal.
                         await mutate(
                           (current) =>
                             current?.lobby

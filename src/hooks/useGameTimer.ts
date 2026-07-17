@@ -16,6 +16,7 @@ export function useGameTimer(lobby?: ClientLobbyState) {
   const serverOffsetRef = useRef(0);
   const isOffsetSet = useRef(false);
 
+  // Align ticks with server time while ignoring minor network jitter.
   useEffect(() => {
     if (!lobby?.serverTime) return;
 

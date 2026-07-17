@@ -22,7 +22,9 @@ export interface Lobby {
   players: Player[];
   status: GameStatus;
   location?: string;
+  // Server timestamp for the start of the current running timer segment.
   timerStartTime?: number;
+  // Elapsed milliseconds accumulated before the current timer segment.
   timerAccumulated?: number;
   isPaused: boolean;
   settings: GameSettings;
@@ -47,6 +49,7 @@ const saveLobby = async (code: string, lobby: Lobby) => {
 };
 
 const getLobby = async (code: string): Promise<Lobby | undefined> => {
+  // Reading an active lobby refreshes its expiration window.
   const lobby = await redis.getex<Lobby>(getLobbyKey(code), {
     ex: LOBBY_TTL,
   });
@@ -62,6 +65,7 @@ const updateLobby = async (
   code: string,
   updater: (lobby: Lobby) => void | boolean | Promise<void | boolean>,
 ): Promise<UpdateResult> => {
+  // Mutations use last-write-wins persistence, not an atomic Redis transaction.
   const lobby = await getLobby(code);
   if (!lobby) return { success: false, reason: "not_found" };
 
@@ -167,7 +171,6 @@ export const store = {
     return updateLobby(code, (lobby) => {
       lobby.players = lobby.players.filter((p) => p.id !== playerId);
 
-      // If host leaves, assign new host
       const hostLeft = !lobby.players.some((p) => p.isHost);
       if (hostLeft && lobby.players[0]) {
         lobby.players[0].isHost = true;
@@ -180,10 +183,8 @@ export const store = {
       const caller = lobby.players.find((p) => p.id === hostId);
       if (!caller?.isHost) return false;
 
-      // Select random location from selectedLocations
       let availableLocations = [...lobby.settings.selectedLocations];
 
-      // Fallback to default locations
       if (availableLocations.length === 0) {
         availableLocations = gameData.spyfall1.map((l) => l.location);
       }
@@ -193,7 +194,6 @@ export const store = {
       );
       const selectedLocationName = availableLocations[randomLocIndex];
 
-      // Find the location object to get roles
       const allLocations = Object.values(
         gameData as Record<string, { location: string; roles: string[] }[]>,
       ).flat();
@@ -212,14 +212,11 @@ export const store = {
       lobby.location = selectedLocation.location;
       lobby.status = "IN_PROGRESS";
 
-      // Timer setup
       lobby.timerStartTime = Date.now();
       lobby.timerAccumulated = 0;
       lobby.isPaused = false;
 
-      // Assign roles
       const roles = [...selectedLocation.roles];
-      // Shuffle players
       const shuffledPlayers = [...lobby.players];
       for (let i = shuffledPlayers.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -228,7 +225,6 @@ export const store = {
         shuffledPlayers[j] = temp;
       }
 
-      // Assign spies
       let spiesAssigned = 0;
       const spyCount = lobby.settings.spyCount;
       const playerMap = new Map(lobby.players.map((p) => [p.id, p]));
@@ -242,7 +238,7 @@ export const store = {
           spiesAssigned++;
         } else {
           originalPlayer.isSpy = false;
-          // Assign roles, cycling through available roles if needed
+          // Reuse role names when players outnumber the available roles.
           const roleIndex = index % roles.length;
           originalPlayer.role = roles[roleIndex];
         }
@@ -258,11 +254,9 @@ export const store = {
       if (lobby.status !== "IN_PROGRESS") return false;
 
       if (lobby.isPaused) {
-        // Resume
         lobby.timerStartTime = Date.now();
         lobby.isPaused = false;
       } else {
-        // Pause
         const now = Date.now();
         lobby.timerAccumulated =
           (lobby.timerAccumulated || 0) + (now - (lobby.timerStartTime || now));
@@ -297,10 +291,8 @@ export const store = {
       const newHost = lobby.players.find((p) => p.id === newHostId);
       if (!newHost) return false;
 
-      // Remove host status from all players
       lobby.players.forEach((p) => (p.isHost = false));
 
-      // Assign new host
       newHost.isHost = true;
     });
   },
