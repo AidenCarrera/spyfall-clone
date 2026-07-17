@@ -1,26 +1,16 @@
 import { MetadataRoute } from "next";
+import { SITE_URL } from "@/src/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || "https://spyfall-clone.vercel.app";
-
   return [
     {
-      url: baseUrl,
-      lastModified: new Date(),
+      url: SITE_URL,
       changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: `${baseUrl}/create`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/join`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
+      url: `${SITE_URL}/how-to-play`,
+      changeFrequency: "monthly",
       priority: 0.8,
     },
   ];

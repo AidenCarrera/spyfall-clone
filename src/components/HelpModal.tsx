@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import Link from "next/link";
 import { Button } from "./Button";
 import { Modal } from "./Modal";
 
@@ -27,7 +28,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       <div className="p-6 overflow-y-auto space-y-6 text-slate-300 leading-relaxed">
         <div className="space-y-2">
           <p>
-            <strong className="text-white">Spyfall</strong> is a social
+            <strong className="text-white">Spyfall</strong>{" "}is a social
             deduction game where one player is the spy and doesn&apos;t know the
             location. Everyone else sees the location and has a role. The
             spy&apos;s goal is to figure out the location without being caught;
@@ -73,8 +74,8 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           </h3>
           <p>At any point, the spy can attempt to guess the location.</p>
           <ul className="list-disc list-inside space-y-1 pl-2 font-medium">
-            <li className="text-green-400">Correct guess &rarr; spy wins</li>
-            <li className="text-red-400">
+            <li className="text-purple-400">Correct guess &rarr; spy wins</li>
+            <li className="text-blue-400">
               Incorrect guess &rarr; non-spies win
             </li>
           </ul>
@@ -101,10 +102,16 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
         </div>
       </div>
 
-      <div className="p-4 border-t border-slate-800 flex justify-end">
+      <div className="flex flex-col-reverse gap-3 border-t border-slate-800 p-4 sm:flex-row sm:justify-end">
         <Button onClick={onClose} variant="secondary">
           Close
         </Button>
+        <Link
+          href="/how-to-play"
+          className="rounded-lg bg-blue-600 px-6 py-3 text-center font-semibold text-white transition-all duration-200 hover:bg-blue-500 active:scale-95"
+        >
+          View Full Rules
+        </Link>
       </div>
     </Modal>
   );

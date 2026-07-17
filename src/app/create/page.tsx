@@ -51,7 +51,8 @@ export default function CreateLobby() {
           </Link>
         </div>
 
-        <Card title="Create Game">
+        <Card>
+          <h1 className="mb-4 text-xl font-bold text-white">Create Game</h1>
           <form onSubmit={handleCreate} className="space-y-6">
             <Input
               label="Your Name"

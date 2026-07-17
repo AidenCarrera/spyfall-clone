@@ -72,7 +72,8 @@ function JoinLobbyContent() {
           </Link>
         </div>
 
-        <Card title="Join Game">
+        <Card>
+          <h1 className="mb-4 text-xl font-bold text-white">Join Game</h1>
           <form onSubmit={handleJoin} className="space-y-6">
             {!urlCode && (
               <Input
