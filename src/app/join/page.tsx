@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { joinLobbyAction } from "../actions";
+import { getLobbyStateAction, joinLobbyAction } from "../actions";
 import { Button } from "@/src/components/Button";
 import { Input } from "@/src/components/Input";
 import { Card } from "@/src/components/Card";
@@ -12,31 +12,32 @@ function JoinLobbyContent() {
   const searchParams = useSearchParams();
   const urlCode = searchParams.get("code");
 
-  const [code, setCode] = useState(urlCode || "");
+  const normalizedUrlCode = urlCode?.trim().toUpperCase() || "";
+  const [code, setCode] = useState(normalizedUrlCode);
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    if (urlCode) {
-      const existingPid = localStorage.getItem(`spyfall_pid_${urlCode}`);
-      if (existingPid) {
-        router.push(`/lobby/${urlCode}`);
+    if (!normalizedUrlCode) return;
+
+    let isCancelled = false;
+    getLobbyStateAction(normalizedUrlCode).then((result) => {
+      if (!isCancelled && result.lobby) {
+        router.replace(`/lobby/${result.lobby.code}`);
       }
-    }
-  }, [urlCode, router]);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [normalizedUrlCode, router]);
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim() || !name.trim()) {
       setError("Please fill in all fields");
-      return;
-    }
-
-    const existingPid = localStorage.getItem(`spyfall_pid_${code.trim()}`);
-    if (existingPid) {
-      router.push(`/lobby/${code.trim()}`);
       return;
     }
 
@@ -48,7 +49,6 @@ function JoinLobbyContent() {
       if (result.error) {
         setError(result.error);
       } else {
-        localStorage.setItem(`spyfall_pid_${result.code}`, result.playerId!);
         router.push(`/lobby/${result.code}`);
       }
     } catch {
@@ -73,7 +73,7 @@ function JoinLobbyContent() {
         <Card>
           <h1 className="mb-4 text-xl font-bold text-white">Join Game</h1>
           <form onSubmit={handleJoin} className="space-y-6">
-            {!urlCode && (
+            {!normalizedUrlCode && (
               <Input
                 label="Room Code"
                 placeholder="Enter 6-character code"

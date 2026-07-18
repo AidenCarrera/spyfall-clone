@@ -1,10 +1,12 @@
 import { redis } from "./redis";
 import gameData from "./game-data.json";
+import { normalizeLobbyCode } from "./auth";
 
 export interface Player {
   id: string;
   name: string;
   isHost: boolean;
+  sessionTokenHash: string;
   role?: string;
   isSpy?: boolean;
 }
@@ -19,6 +21,7 @@ export interface GameSettings {
 
 export interface Lobby {
   code: string;
+  version: number;
   players: Player[];
   status: GameStatus;
   location?: string;
@@ -41,19 +44,67 @@ function generateCode(length: number = 6): string {
 
 const LOBBY_TTL = 86400; // 24 hours in seconds
 const MAX_PLAYERS = 12;
+const MIN_PLAYERS = 3;
+const UPDATE_RETRY_ATTEMPTS = 30;
 
-const getLobbyKey = (code: string) => `lobby:${code.toUpperCase()}`;
+const COMPARE_AND_SET_LOBBY_SCRIPT = `
+local current = redis.call("get", KEYS[1])
+if not current then
+  return -1
+end
+local lobby = cjson.decode(current)
+local current_version = tonumber(lobby.version or 0)
+local expected_version = tonumber(ARGV[1])
+if current_version ~= expected_version then
+  return 0
+end
 
-const saveLobby = async (code: string, lobby: Lobby) => {
-  await redis.set(getLobbyKey(code), lobby, { ex: LOBBY_TTL });
+if ARGV[2] == "" then
+  redis.call("del", KEYS[1])
+else
+  redis.call("set", KEYS[1], ARGV[2], "ex", ARGV[3])
+end
+
+return 1
+`;
+
+const getLobbyKey = (code: string) => `lobby:${normalizeLobbyCode(code)}`;
+
+const waitForRetry = () =>
+  new Promise((resolve) =>
+    setTimeout(resolve, 5 + Math.floor(Math.random() * 15)),
+  );
+
+const compareAndSetLobby = async (
+  code: string,
+  expectedVersion: number,
+  lobby?: Lobby,
+) => {
+  return redis.eval<string[], number>(
+    COMPARE_AND_SET_LOBBY_SCRIPT,
+    [getLobbyKey(code)],
+    [
+      expectedVersion.toString(),
+      lobby ? JSON.stringify(lobby) : "",
+      LOBBY_TTL.toString(),
+    ],
+  );
 };
+
+const isCurrentLobby = (lobby: Lobby): boolean =>
+  Number.isInteger(lobby.version) &&
+  lobby.players.every(
+    (player) =>
+      typeof player.sessionTokenHash === "string" &&
+      player.sessionTokenHash.length > 0,
+  );
 
 const getLobby = async (code: string): Promise<Lobby | undefined> => {
   // Reading an active lobby refreshes its expiration window.
   const lobby = await redis.getex<Lobby>(getLobbyKey(code), {
     ex: LOBBY_TTL,
   });
-  return lobby || undefined;
+  return lobby && isCurrentLobby(lobby) ? lobby : undefined;
 };
 
 type UpdateResult =
@@ -65,28 +116,47 @@ const updateLobby = async (
   code: string,
   updater: (lobby: Lobby) => void | boolean | Promise<void | boolean>,
 ): Promise<UpdateResult> => {
-  // Mutations use last-write-wins persistence, not an atomic Redis transaction.
-  const lobby = await getLobby(code);
-  if (!lobby) return { success: false, reason: "not_found" };
+  for (let attempt = 0; attempt < UPDATE_RETRY_ATTEMPTS; attempt++) {
+    const lobby = await redis.get<Lobby>(getLobbyKey(code));
+    if (!lobby || !isCurrentLobby(lobby)) {
+      return { success: false, reason: "not_found" };
+    }
 
-  const result = await updater(lobby);
-  if (result === false) return { success: false, reason: "rejected" };
+    const expectedVersion = lobby.version;
+    const result = await updater(lobby);
+    if (result === false) return { success: false, reason: "rejected" };
 
-  if (lobby.players.length === 0) {
-    await redis.del(getLobbyKey(code));
-  } else {
-    await saveLobby(code, lobby);
+    lobby.version = expectedVersion + 1;
+    const writeResult = await compareAndSetLobby(
+      code,
+      expectedVersion,
+      lobby.players.length > 0 ? lobby : undefined,
+    );
+
+    if (writeResult === 1) {
+      return { success: true, lobby };
+    }
+    if (writeResult === -1) return { success: false, reason: "not_found" };
+
+    await waitForRetry();
   }
 
-  return { success: true, lobby };
+  throw new Error("Lobby is busy. Please try again.");
 };
 
+const getCaller = (lobby: Lobby, sessionTokenHash: string) =>
+  lobby.players.find((player) => player.sessionTokenHash === sessionTokenHash);
+
 export const store = {
-  createLobby: async (hostName: string): Promise<Lobby> => {
+  createLobby: async (
+    hostName: string,
+    sessionTokenHash: string,
+  ): Promise<Lobby> => {
     const host: Player = {
       id: crypto.randomUUID(),
       name: hostName,
       isHost: true,
+      sessionTokenHash,
     };
 
     // Generate a unique lobby code using an atomic Redis "set if not exists".
@@ -96,6 +166,7 @@ export const store = {
       const code = generateCode();
       const candidate: Lobby = {
         code,
+        version: 0,
         players: [host],
         status: "LOBBY",
         isPaused: false,
@@ -122,6 +193,7 @@ export const store = {
   joinLobby: async (
     code: string,
     playerName: string,
+    sessionTokenHash: string,
   ): Promise<{ lobby: Lobby; playerId: string } | { error: string }> => {
     let playerId: string | undefined;
     let joinError: string | undefined;
@@ -150,6 +222,7 @@ export const store = {
         id: crypto.randomUUID(),
         name: playerName,
         isHost: false,
+        sessionTokenHash,
       };
 
       lobby.players.push(player);
@@ -167,9 +240,22 @@ export const store = {
 
   getLobby,
 
-  leaveLobby: async (code: string, playerId: string) => {
+  getLobbyForSession: async (code: string, sessionTokenHash: string) => {
+    const lobby = await getLobby(code);
+    if (!lobby) return { error: "not_found" as const };
+
+    const player = getCaller(lobby, sessionTokenHash);
+    if (!player) return { error: "unauthorized" as const };
+
+    return { lobby, player };
+  },
+
+  leaveLobby: async (code: string, sessionTokenHash: string) => {
     return updateLobby(code, (lobby) => {
-      lobby.players = lobby.players.filter((p) => p.id !== playerId);
+      const caller = getCaller(lobby, sessionTokenHash);
+      if (!caller) return false;
+
+      lobby.players = lobby.players.filter((p) => p.id !== caller.id);
 
       const hostLeft = !lobby.players.some((p) => p.isHost);
       if (hostLeft && lobby.players[0]) {
@@ -178,10 +264,18 @@ export const store = {
     });
   },
 
-  startGame: async (code: string, hostId: string) => {
+  startGame: async (code: string, sessionTokenHash: string) => {
     return updateLobby(code, (lobby) => {
-      const caller = lobby.players.find((p) => p.id === hostId);
+      const caller = getCaller(lobby, sessionTokenHash);
       if (!caller?.isHost) return false;
+      if (lobby.status !== "LOBBY") return false;
+      if (lobby.players.length < MIN_PLAYERS) return false;
+      if (
+        lobby.settings.spyCount < 1 ||
+        lobby.settings.spyCount >= lobby.players.length
+      ) {
+        return false;
+      }
 
       let availableLocations = [...lobby.settings.selectedLocations];
 
@@ -246,9 +340,9 @@ export const store = {
     });
   },
 
-  togglePause: async (code: string, hostId: string) => {
+  togglePause: async (code: string, sessionTokenHash: string) => {
     return updateLobby(code, (lobby) => {
-      const caller = lobby.players.find((p) => p.id === hostId);
+      const caller = getCaller(lobby, sessionTokenHash);
       if (!caller?.isHost) return false;
 
       if (lobby.status !== "IN_PROGRESS") return false;
@@ -266,10 +360,11 @@ export const store = {
     });
   },
 
-  resetGame: async (code: string, hostId: string) => {
+  resetGame: async (code: string, sessionTokenHash: string) => {
     return updateLobby(code, (lobby) => {
-      const caller = lobby.players.find((p) => p.id === hostId);
+      const caller = getCaller(lobby, sessionTokenHash);
       if (!caller?.isHost) return false;
+      if (lobby.status !== "IN_PROGRESS") return false;
 
       lobby.status = "LOBBY";
       lobby.location = undefined;
@@ -283,13 +378,18 @@ export const store = {
     });
   },
 
-  promoteHost: async (code: string, hostId: string, newHostId: string) => {
+  promoteHost: async (
+    code: string,
+    sessionTokenHash: string,
+    newHostId: string,
+  ) => {
     return updateLobby(code, (lobby) => {
-      const caller = lobby.players.find((p) => p.id === hostId);
+      const caller = getCaller(lobby, sessionTokenHash);
       if (!caller?.isHost) return false;
+      if (lobby.status !== "LOBBY") return false;
 
       const newHost = lobby.players.find((p) => p.id === newHostId);
-      if (!newHost) return false;
+      if (!newHost || newHost.id === caller.id) return false;
 
       lobby.players.forEach((p) => (p.isHost = false));
 
@@ -297,10 +397,18 @@ export const store = {
     });
   },
 
-  kickPlayer: async (code: string, hostId: string, playerId: string) => {
+  kickPlayer: async (
+    code: string,
+    sessionTokenHash: string,
+    playerId: string,
+  ) => {
     return updateLobby(code, (lobby) => {
-      const caller = lobby.players.find((p) => p.id === hostId);
+      const caller = getCaller(lobby, sessionTokenHash);
       if (!caller?.isHost) return false;
+      if (lobby.status !== "LOBBY") return false;
+
+      const playerToKick = lobby.players.find((p) => p.id === playerId);
+      if (!playerToKick || playerToKick.isHost) return false;
 
       lobby.players = lobby.players.filter((p) => p.id !== playerId);
     });
@@ -308,12 +416,13 @@ export const store = {
 
   updateSettings: async (
     code: string,
-    hostId: string,
+    sessionTokenHash: string,
     settings: Partial<GameSettings>,
   ) => {
     return updateLobby(code, (lobby) => {
-      const caller = lobby.players.find((p) => p.id === hostId);
+      const caller = getCaller(lobby, sessionTokenHash);
       if (!caller?.isHost) return false;
+      if (lobby.status !== "LOBBY") return false;
 
       lobby.settings = { ...lobby.settings, ...settings };
     });

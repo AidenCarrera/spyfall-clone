@@ -21,9 +21,9 @@ export default function LobbyPage({
 }: {
   params: Promise<{ code: string }>;
 }) {
-  const { code } = use(params);
+  const { code: routeCode } = use(params);
+  const code = routeCode.trim().toUpperCase();
   const router = useRouter();
-  const [playerId, setPlayerId] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
@@ -47,8 +47,8 @@ export default function LobbyPage({
     error: lobbyError,
     mutate,
   } = useSWR(
-    playerId && !isLeaving ? ["lobby", code, playerId] : null,
-    ([, c, pid]) => getLobbyStateAction(c, pid),
+    !isLeaving ? ["lobby", code] : null,
+    ([, c]) => getLobbyStateAction(c),
     {
       refreshInterval: (latestData) => {
         const isKicked =
@@ -76,16 +76,10 @@ export default function LobbyPage({
   const { timeLeft, isTimeUp } = useGameTimer(lobby);
 
   useEffect(() => {
-    const storedPid = localStorage.getItem(`spyfall_pid_${code}`);
-    if (!storedPid) {
-      router.push(`/join?code=${code}`);
-      return;
+    if (lobbyData?.error === "Session not found") {
+      router.replace(`/join?code=${code}`);
     }
-    if (storedPid !== playerId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate browser-only local storage after mount.
-      setPlayerId(storedPid);
-    }
-  }, [code, router, playerId]);
+  }, [code, lobbyData?.error, router]);
 
   const handleStartGame = async () => {
     if (!lobby) return;
@@ -99,7 +93,7 @@ export default function LobbyPage({
     }
     setIsStarting(true);
     try {
-      await startGameAction(code, playerId!);
+      await startGameAction(code);
       mutate();
     } finally {
       setIsStarting(false);
@@ -109,14 +103,16 @@ export default function LobbyPage({
   const handleLeave = async () => {
     if (!confirm("Are you sure you want to leave the lobby?")) return;
     setIsLeaving(true);
-    if (playerId) {
-      try {
-        await leaveLobbyAction(code, playerId);
-      } catch (e) {
-        console.error("Error leaving lobby:", e);
+    try {
+      const result = await leaveLobbyAction(code);
+      if (result.error) {
+        setIsLeaving(false);
+        return;
       }
-      localStorage.removeItem(`spyfall_pid_${code}`);
       router.push("/");
+    } catch (e) {
+      console.error("Error leaving lobby:", e);
+      setIsLeaving(false);
     }
   };
 
@@ -140,7 +136,7 @@ export default function LobbyPage({
       { revalidate: false },
     );
     try {
-      await resetGameAction(code, playerId!);
+      await resetGameAction(code);
       mutate();
     } finally {
       setIsResetting(false);
@@ -168,7 +164,7 @@ export default function LobbyPage({
 
     await mutate({ lobby: updatedLobby }, { revalidate: false });
 
-    await togglePauseAction(code, playerId!);
+    await togglePauseAction(code);
     mutate();
   };
 
@@ -181,6 +177,14 @@ export default function LobbyPage({
   }
 
   if (error) {
+    if (error === "Session not found") {
+      return (
+        <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+          Loading...
+        </main>
+      );
+    }
+
     const isKicked = error === "Player not found in lobby";
 
     return (
@@ -196,7 +200,6 @@ export default function LobbyPage({
             )}
             <Button
               onClick={() => {
-                localStorage.removeItem(`spyfall_pid_${code}`);
                 router.push("/");
               }}
               className="w-full"
@@ -216,7 +219,7 @@ export default function LobbyPage({
       <LobbyView
         code={code}
         lobby={lobby}
-        playerId={playerId!}
+        playerId={lobby.me.id}
         mutate={mutate}
         isStarting={isStarting}
         onStartGame={handleStartGame}

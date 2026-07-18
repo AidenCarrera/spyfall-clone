@@ -87,7 +87,7 @@ export function PlayerList({
                           { revalidate: false },
                         );
                         try {
-                          await promoteHostAction(code, playerId, p.id);
+                          await promoteHostAction(code, p.id);
                           mutate();
                         } finally {
                           setPendingPlayerId(null);
@@ -120,7 +120,7 @@ export function PlayerList({
                           { revalidate: false },
                         );
                         try {
-                          await kickPlayerAction(code, playerId, p.id);
+                          await kickPlayerAction(code, p.id);
                           mutate();
                         } finally {
                           setPendingPlayerId(null);

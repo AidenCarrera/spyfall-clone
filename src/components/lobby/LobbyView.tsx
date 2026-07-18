@@ -57,7 +57,6 @@ export function LobbyView({
         <GameSettings
           code={code}
           lobby={lobby}
-          playerId={playerId}
           isHost={isHost}
           mutate={mutate}
         />

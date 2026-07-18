@@ -13,7 +13,6 @@ import gameData from "@/src/lib/game-data.json";
 interface GameSettingsProps {
   code: string;
   lobby: ClientLobbyState;
-  playerId: string;
   isHost: boolean;
   mutate: KeyedMutator<{ lobby?: ClientLobbyState; error?: string }>;
 }
@@ -21,13 +20,12 @@ interface GameSettingsProps {
 export function GameSettings({
   code,
   lobby,
-  playerId,
   isHost,
   mutate,
 }: GameSettingsProps) {
   const [isEditLocationsOpen, setIsEditLocationsOpen] = useState(false);
   const updateSettings = async (
-    settings: Parameters<typeof updateSettingsAction>[2],
+    settings: Parameters<typeof updateSettingsAction>[1],
   ) => {
     await mutate(
       (current) =>
@@ -39,7 +37,7 @@ export function GameSettings({
           : current,
       { revalidate: false },
     );
-    await updateSettingsAction(code, playerId, settings);
+    await updateSettingsAction(code, settings);
     await mutate();
   };
 
