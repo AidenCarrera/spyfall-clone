@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/src/components/Button";
+import { Button, buttonClassName } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
 import { HelpModal } from "@/src/components/HelpModal";
 import { SiteFooter } from "@/src/components/SiteFooter";
@@ -24,10 +24,15 @@ export default function Home() {
           </div>
 
           <Card className="space-y-4 text-left">
-            <Link href="/create" className="block">
-              <Button fullWidth variant="primary" className="h-14 text-lg">
-                Create New Game
-              </Button>
+            <Link
+              href="/create"
+              className={buttonClassName({
+                fullWidth: true,
+                variant: "primary",
+                className: "h-14 text-lg",
+              })}
+            >
+              Create New Game
             </Link>
 
             <div className="relative" aria-hidden="true">
@@ -39,10 +44,15 @@ export default function Home() {
               </div>
             </div>
 
-            <Link href="/join" className="block">
-              <Button fullWidth variant="secondary" className="h-14 text-lg">
-                Join Existing Game
-              </Button>
+            <Link
+              href="/join"
+              className={buttonClassName({
+                fullWidth: true,
+                variant: "secondary",
+                className: "h-14 text-lg",
+              })}
+            >
+              Join Existing Game
             </Link>
 
             <Button

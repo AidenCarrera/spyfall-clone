@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export async function generateMetadata({
   params,
@@ -6,12 +7,13 @@ export async function generateMetadata({
   params: Promise<{ code: string }>;
 }): Promise<Metadata> {
   const { code } = await params;
+  const normalizedCode = code.trim().toUpperCase();
 
   return {
     title: "Private Game Lobby",
     description: "A private Spyfall game lobby shared by invitation.",
     alternates: {
-      canonical: `/lobby/${encodeURIComponent(code)}`,
+      canonical: `/lobby/${encodeURIComponent(normalizedCode)}`,
     },
     robots: {
       index: false,
@@ -24,13 +26,24 @@ export async function generateMetadata({
     openGraph: {
       title: "Private Spyfall Game Lobby",
       description: "A private Spyfall game lobby shared by invitation.",
-      url: `/lobby/${encodeURIComponent(code)}`,
+      url: `/lobby/${encodeURIComponent(normalizedCode)}`,
     },
   };
 }
 
-export default function LobbyLayout({
+export default async function LobbyLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  params,
+}: Readonly<{
+  children: React.ReactNode;
+  params: Promise<{ code: string }>;
+}>) {
+  const { code } = await params;
+  const normalizedCode = code.trim().toUpperCase();
+
+  if (code !== normalizedCode && /^[A-Z0-9]{6}$/.test(normalizedCode)) {
+    redirect(`/lobby/${normalizedCode}`);
+  }
+
   return children;
 }

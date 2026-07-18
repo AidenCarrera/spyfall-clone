@@ -12,13 +12,15 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   if (!isOpen) return null;
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} ariaLabelledBy="help-modal-title">
       <div className="flex items-center justify-between p-4 border-b border-slate-800">
-        <h2 className="text-xl font-bold text-blue-400">How to Play</h2>
+        <h2 id="help-modal-title" className="text-xl font-bold text-blue-400">
+          How to Play
+        </h2>
         <button
           type="button"
           onClick={onClose}
-          className="text-slate-400 hover:text-white transition-colors"
+          className="rounded text-slate-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           aria-label="Close help"
         >
           <X className="w-6 h-6" />
@@ -28,7 +30,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       <div className="p-6 overflow-y-auto space-y-6 text-slate-300 leading-relaxed">
         <div className="space-y-2">
           <p>
-            <strong className="text-white">Spyfall</strong>{" "}is a social
+            <strong className="text-white">Spyfall</strong> is a social
             deduction game where one player is the spy and doesn&apos;t know the
             location. Everyone else sees the location and has a role. The
             spy&apos;s goal is to figure out the location without being caught;

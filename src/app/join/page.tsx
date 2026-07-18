@@ -36,7 +36,8 @@ function JoinLobbyContent() {
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code.trim() || !name.trim()) {
+    const submittedCode = normalizedUrlCode || code.trim().toUpperCase();
+    if (!submittedCode || !name.trim()) {
       setError("Please fill in all fields");
       return;
     }
@@ -45,7 +46,7 @@ function JoinLobbyContent() {
     setError("");
 
     try {
-      const result = await joinLobbyAction(code.trim(), name.trim());
+      const result = await joinLobbyAction(submittedCode, name.trim());
       if (result.error) {
         setError(result.error);
       } else {
@@ -79,7 +80,9 @@ function JoinLobbyContent() {
                 placeholder="Enter 6-character code"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                maxLength={8}
+                maxLength={6}
+                autoCapitalize="characters"
+                spellCheck={false}
               />
             )}
 
