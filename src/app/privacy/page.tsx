@@ -36,7 +36,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="mt-4 text-sm text-slate-400">
-            Last updated <time dateTime="2026-07-17">July 17, 2026</time>
+            Last updated <time dateTime="2026-07-18">July 18, 2026</time>
           </p>
         </header>
 
@@ -49,7 +49,10 @@ export default function PrivacyPage() {
               When you play, the site processes your display name, room code,
               game settings, assigned role, and other lobby state needed to run
               the game. Your IP address is processed to prevent excessive room
-              creation and joining attempts.
+              creation and joining attempts. Anonymous usage analytics may
+              include the page viewed, referrer, approximate location, browser,
+              operating system, and device type. Room codes are removed from
+              page paths and query parameters before analytics are sent.
             </p>
           </section>
 
@@ -60,8 +63,8 @@ export default function PrivacyPage() {
             <p className="mt-3">
               A random player identifier is stored in your browser so you can
               reconnect to a room. The site does not use advertising cookies.
-              Lobby information is stored temporarily and expires after 24
-              hours without activity.
+              Vercel Web Analytics does not use cookies. Lobby information is
+              stored temporarily and expires after 24 hours without activity.
             </p>
           </section>
 
@@ -70,10 +73,10 @@ export default function PrivacyPage() {
               Service providers
             </h2>
             <p className="mt-3">
-              Spyfall Online uses Vercel for website hosting and Upstash for
-              lobby storage and rate limiting. These providers may process
-              technical request information according to their own privacy
-              policies.
+              Spyfall Online uses Vercel for website hosting and anonymous web
+              analytics, and Upstash for lobby storage and rate limiting. These
+              providers may process technical request information according to
+              their own privacy policies.
             </p>
           </section>
 
@@ -83,8 +86,8 @@ export default function PrivacyPage() {
             </h2>
             <p className="mt-3">
               Personal information is not sold. Information is shared only with
-              the service providers required to operate and protect the game,
-              or when required by law.
+              the service providers required to operate and protect the game, or
+              when required by law.
             </p>
           </section>
 

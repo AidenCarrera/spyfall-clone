@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import {
-  SITE_DESCRIPTION,
-  SITE_NAME,
-  SITE_URL,
-} from "@/src/lib/site";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/src/lib/site";
+import { VercelAnalytics } from "@/src/components/VercelAnalytics";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -114,6 +111,7 @@ export default function RootLayout({
             }),
           }}
         />
+        <VercelAnalytics />
       </body>
     </html>
   );
