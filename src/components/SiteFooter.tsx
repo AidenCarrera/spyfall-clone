@@ -12,10 +12,10 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
         className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
       >
         <Link
-          href="/how-to-play"
+          href="/rules"
           className="transition-colors hover:text-slate-300"
         >
-          Help
+          Rules
         </Link>
         <Link
           href="/privacy"

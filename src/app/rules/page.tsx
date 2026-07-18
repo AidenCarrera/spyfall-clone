@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_DESCRIPTION } from "@/src/lib/site";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/src/lib/site";
 import { SiteFooter } from "@/src/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "How to Play Spyfall - Rules, Setup, and Tips",
+  title: "Rules",
   description:
     "Learn how to play Spyfall online, including game setup, roles, questioning, accusations, win conditions, and strategy tips.",
   alternates: {
-    canonical: "/how-to-play",
+    canonical: "/rules",
   },
   openGraph: {
-    title: "How to Play Spyfall - Complete Online Rules",
+    title: `Rules | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
-    url: "/how-to-play",
+    url: "/rules",
   },
 };
 
@@ -62,7 +62,7 @@ const faqs = [
   },
 ];
 
-export default function HowToPlayPage() {
+export default function RulesPage() {
   return (
     <main className="min-h-screen bg-linear-to-b from-slate-900 to-slate-950 px-4 py-12 sm:py-16">
       <article className="mx-auto max-w-3xl">
@@ -74,11 +74,8 @@ export default function HowToPlayPage() {
         </Link>
 
         <header className="mt-10 border-b border-slate-800 pb-10">
-          <p className="font-mono text-sm font-bold uppercase tracking-wider text-blue-300">
-            Complete rules
-          </p>
-          <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl">
-            How to play Spyfall
+          <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
+            Spyfall rules
           </h1>
           <div className="mt-5 space-y-4 text-lg leading-relaxed text-slate-300">
             <p>

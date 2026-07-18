@@ -61,7 +61,7 @@ export default function Home() {
               className="h-12 border-slate-700 bg-slate-800/50 text-base hover:bg-slate-800"
               onClick={() => setIsHelpOpen(true)}
             >
-              How to Play
+              Quick Rules
             </Button>
           </Card>
 

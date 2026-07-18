@@ -9,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${SITE_URL}/how-to-play`,
+      url: `${SITE_URL}/rules`,
       changeFrequency: "monthly",
       priority: 0.8,
     },

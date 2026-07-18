@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Create a Private Game",
+  title: "Create Game",
   description:
     "Create a private Spyfall room and invite friends with a shareable game code.",
   alternates: {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    title: "Create a Private Spyfall Game",
+    title: "Create Game | Spyfall",
     description:
       "Create a private Spyfall room and invite friends with a shareable game code.",
     url: "/create",

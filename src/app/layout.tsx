@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Play Spyfall Online Free - Multiplayer Party Game",
+    default: "Spyfall - Free Multiplayer Party Game",
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Play Spyfall Online Free - Find the Spy",
+    title: "Spyfall - Free Multiplayer Party Game",
     description: SITE_DESCRIPTION,
     url: "/",
     type: "website",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Play Spyfall Online Free - Find the Spy",
+    title: "Spyfall - Free Multiplayer Party Game",
     description: SITE_DESCRIPTION,
     images: ["/og-image.png"],
   },

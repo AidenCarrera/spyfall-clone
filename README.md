@@ -84,7 +84,7 @@ The goal of this project is to make playing Spyfall with friends quick and easy.
 
 ---
 
-## How to Play
+## Rules
 
 1. **Host a Game:** Start a lobby and share the 6-character room code or link.
 2. **Setup:** Customize the round timer, number of spies, and location packs.

@@ -10,7 +10,7 @@ export async function generateMetadata({
   const normalizedCode = code.trim().toUpperCase();
 
   return {
-    title: "Private Game Lobby",
+    title: "Lobby",
     description: "A private Spyfall game lobby shared by invitation.",
     alternates: {
       canonical: `/lobby/${encodeURIComponent(normalizedCode)}`,
@@ -24,7 +24,7 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      title: "Private Spyfall Game Lobby",
+      title: "Lobby | Spyfall",
       description: "A private Spyfall game lobby shared by invitation.",
       url: `/lobby/${encodeURIComponent(normalizedCode)}`,
     },

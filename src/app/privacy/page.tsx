@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/src/components/SiteFooter";
+import { SITE_NAME } from "@/src/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     canonical: "/privacy",
   },
   openGraph: {
-    title: "Privacy Policy",
+    title: `Privacy Policy | ${SITE_NAME}`,
     description:
       "Learn what information Spyfall Online processes and how game and browser data are handled.",
     url: "/privacy",
