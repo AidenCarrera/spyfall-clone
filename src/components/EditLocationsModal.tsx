@@ -2,74 +2,67 @@ import { useState } from "react";
 import { Button } from "./Button";
 import { Modal } from "./Modal";
 import { X, Check } from "lucide-react";
+import { DEFAULT_LOCATION_NAMES, LOCATION_SETS } from "@/src/lib/locations";
 
 interface EditLocationsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  gameData: Record<string, { location: string; roles: string[] }[]>;
   selectedLocations: string[];
   onUpdate: (newSelectedLocations: string[]) => void;
 }
 
 export function EditLocationsModal({
   isOpen,
-  onClose,
-  gameData,
-  selectedLocations,
-  onUpdate,
+  ...contentProps
 }: EditLocationsModalProps) {
+  // Remounting on open resets any unsaved edits from the previous session.
   if (!isOpen) return null;
 
-  return (
-    <EditLocationsModalContent
-      onClose={onClose}
-      gameData={gameData}
-      selectedLocations={selectedLocations}
-      onUpdate={onUpdate}
-    />
-  );
+  return <EditLocationsModalContent {...contentProps} />;
 }
 
 type EditLocationsModalContentProps = Omit<EditLocationsModalProps, "isOpen">;
 
 function EditLocationsModalContent({
   onClose,
-  gameData,
   selectedLocations,
   onUpdate,
 }: EditLocationsModalContentProps) {
-  const [localSelected, setLocalSelected] = useState<string[]>(() =>
-    selectedLocations.length > 0
-      ? selectedLocations
-      : (gameData.spyfall1?.map((location) => location.location) ?? []),
+  const [localSelected, setLocalSelected] = useState<ReadonlySet<string>>(
+    () =>
+      new Set(
+        selectedLocations.length > 0
+          ? selectedLocations
+          : DEFAULT_LOCATION_NAMES,
+      ),
   );
 
   const handleToggleLocation = (location: string) => {
     setLocalSelected((prev) => {
-      if (prev.includes(location)) {
-        return prev.filter((l) => l !== location);
-      } else {
-        return [...prev, location];
-      }
+      const next = new Set(prev);
+      if (!next.delete(location)) next.add(location);
+      return next;
     });
   };
 
   const handleSelectAllSet = (setKey: string) => {
-    const setLocations = gameData[setKey]?.map((l) => l.location) || [];
     setLocalSelected((prev) => {
-      const newSet = new Set(prev);
-      setLocations.forEach((l) => newSet.add(l));
-      return Array.from(newSet);
+      const next = new Set(prev);
+      LOCATION_SETS[setKey]?.forEach((l) => next.add(l.location));
+      return next;
     });
   };
 
   const handleClearSet = (setKey: string) => {
-    const setLocations = gameData[setKey]?.map((l) => l.location) || [];
-    setLocalSelected((prev) => prev.filter((l) => !setLocations.includes(l)));
+    setLocalSelected((prev) => {
+      const next = new Set(prev);
+      LOCATION_SETS[setKey]?.forEach((l) => next.delete(l.location));
+      return next;
+    });
   };
 
   const handleSave = () => {
-    onUpdate(localSelected);
+    onUpdate([...localSelected]);
     onClose();
   };
 
@@ -95,10 +88,9 @@ function EditLocationsModalContent({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-8">
-        {Object.entries(gameData).map(([setKey, locations]) => {
-          const setLocationNames = locations.map((l) => l.location);
-          const selectedCount = setLocationNames.filter((l) =>
-            localSelected.includes(l),
+        {Object.entries(LOCATION_SETS).map(([setKey, locations]) => {
+          const selectedCount = locations.filter((l) =>
+            localSelected.has(l.location),
           ).length;
 
           return (
@@ -132,7 +124,7 @@ function EditLocationsModalContent({
                 {[...locations]
                   .sort((a, b) => a.location.localeCompare(b.location))
                   .map((loc) => {
-                    const isSelected = localSelected.includes(loc.location);
+                    const isSelected = localSelected.has(loc.location);
                     return (
                       <button
                         key={loc.location}
@@ -168,12 +160,21 @@ function EditLocationsModalContent({
         })}
       </div>
 
-      <div className="p-4 border-t border-slate-700 flex justify-end gap-3 bg-slate-900 rounded-b-xl">
+      <div className="p-4 border-t border-slate-700 flex items-center justify-end gap-3 bg-slate-900 rounded-b-xl">
+        {localSelected.size === 0 && (
+          <p className="mr-auto text-sm text-red-400">
+            Select at least one location.
+          </p>
+        )}
         <Button variant="secondary" onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleSave}>
-          Save Changes ({localSelected.length})
+        <Button
+          variant="primary"
+          onClick={handleSave}
+          disabled={localSelected.size === 0}
+        >
+          Save Changes ({localSelected.size})
         </Button>
       </div>
     </Modal>

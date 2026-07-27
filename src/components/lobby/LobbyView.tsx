@@ -9,11 +9,10 @@ import { AccessCode } from "./AccessCode";
 import { GameSettings } from "./GameSettings";
 import { PlayerList } from "./PlayerList";
 import type { ClientLobbyState } from "@/src/app/actions";
+import { MIN_PLAYERS } from "@/src/lib/game-rules";
 
 interface LobbyViewProps {
-  code: string;
   lobby: ClientLobbyState;
-  playerId: string;
   mutate: KeyedMutator<{ lobby?: ClientLobbyState; error?: string }>;
   isStarting?: boolean;
   onStartGame: () => void;
@@ -21,9 +20,7 @@ interface LobbyViewProps {
 }
 
 export function LobbyView({
-  code,
   lobby,
-  playerId,
   mutate,
   isStarting,
   onStartGame,
@@ -31,6 +28,7 @@ export function LobbyView({
 }: LobbyViewProps) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const isHost = lobby.me.isHost;
+  const hasEnoughPlayers = lobby.players.length >= MIN_PLAYERS;
 
   return (
     <main className="min-h-screen p-4 bg-linear-to-b from-slate-900 to-slate-950 text-white">
@@ -52,32 +50,21 @@ export function LobbyView({
           </Button>
         </div>
 
-        <AccessCode code={code} />
+        <AccessCode code={lobby.code} />
 
-        <GameSettings
-          code={code}
-          lobby={lobby}
-          isHost={isHost}
-          mutate={mutate}
-        />
+        <GameSettings lobby={lobby} mutate={mutate} />
 
-        <PlayerList
-          code={code}
-          lobby={lobby}
-          playerId={playerId}
-          isHost={isHost}
-          mutate={mutate}
-        />
+        <PlayerList lobby={lobby} mutate={mutate} />
 
         {isHost ? (
           <Button
             fullWidth
             onClick={onStartGame}
-            disabled={lobby.players.length < 3 || isStarting}
+            disabled={!hasEnoughPlayers || isStarting}
           >
             {isStarting
               ? "Starting..."
-              : `Start Game${lobby.players.length < 3 ? " (Need 3+ players)" : ""}`}
+              : `Start Game${hasEnoughPlayers ? "" : ` (Need ${MIN_PLAYERS}+ players)`}`}
           </Button>
         ) : (
           <p className="text-center text-slate-500 animate-pulse">

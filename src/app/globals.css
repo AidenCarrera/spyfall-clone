@@ -24,7 +24,8 @@ body {
 }
 
 .spyfall-glow {
-  filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.2)) drop-shadow(0 0 16px rgba(168, 85, 247, 0.1));
+  filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.2))
+    drop-shadow(0 0 16px rgba(168, 85, 247, 0.1));
 }
 
 @keyframes moving-gradient {

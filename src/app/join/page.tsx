@@ -7,12 +7,13 @@ import { Button } from "@/src/components/Button";
 import { Input } from "@/src/components/Input";
 import { Card } from "@/src/components/Card";
 import Link from "next/link";
+import { LOBBY_CODE_LENGTH, normalizeLobbyCode } from "@/src/lib/lobby-code";
 
 function JoinLobbyContent() {
   const searchParams = useSearchParams();
   const urlCode = searchParams.get("code");
 
-  const normalizedUrlCode = urlCode?.trim().toUpperCase() || "";
+  const normalizedUrlCode = normalizeLobbyCode(urlCode ?? "");
   const [code, setCode] = useState(normalizedUrlCode);
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +37,7 @@ function JoinLobbyContent() {
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const submittedCode = normalizedUrlCode || code.trim().toUpperCase();
+    const submittedCode = normalizedUrlCode || normalizeLobbyCode(code);
     if (!submittedCode || !name.trim()) {
       setError("Please fill in all fields");
       return;
@@ -77,10 +78,10 @@ function JoinLobbyContent() {
             {!normalizedUrlCode && (
               <Input
                 label="Room Code"
-                placeholder="Enter 6-character code"
+                placeholder={`Enter ${LOBBY_CODE_LENGTH}-character code`}
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                maxLength={6}
+                maxLength={LOBBY_CODE_LENGTH}
                 autoCapitalize="characters"
                 spellCheck={false}
               />

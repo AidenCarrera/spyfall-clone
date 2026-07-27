@@ -13,8 +13,7 @@ function formatTime(seconds: number) {
 
 export function useGameTimer(lobby?: ClientLobbyState) {
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
-  const serverOffsetRef = useRef(0);
-  const isOffsetSet = useRef(false);
+  const serverOffsetRef = useRef<number | null>(null);
 
   // Align ticks with server time while ignoring minor network jitter.
   useEffect(() => {
@@ -22,11 +21,10 @@ export function useGameTimer(lobby?: ClientLobbyState) {
 
     const newOffset = lobby.serverTime - Date.now();
     if (
-      !isOffsetSet.current ||
+      serverOffsetRef.current === null ||
       Math.abs(serverOffsetRef.current - newOffset) > 1000
     ) {
       serverOffsetRef.current = newOffset;
-      isOffsetSet.current = true;
     }
   }, [lobby?.serverTime]);
 
@@ -35,23 +33,21 @@ export function useGameTimer(lobby?: ClientLobbyState) {
 
     const tick = () => {
       const totalDurationMs = lobby.timerDuration * 60 * 1000;
+      const accumulatedMs = lobby.timerAccumulated ?? 0;
 
+      let elapsedMs;
       if (lobby.isPaused) {
-        const elapsedMs = lobby.timerAccumulated ?? 0;
-        setSecondsRemaining(
-          Math.max(0, Math.ceil((totalDurationMs - elapsedMs) / 1000)),
-        );
+        elapsedMs = accumulatedMs;
+      } else if (lobby.timerStartTime) {
+        const adjustedNow = Date.now() + (serverOffsetRef.current ?? 0);
+        elapsedMs = adjustedNow - lobby.timerStartTime + accumulatedMs;
+      } else {
         return;
       }
 
-      if (lobby.timerStartTime) {
-        const adjustedNow = Date.now() + serverOffsetRef.current;
-        const currentSegment = adjustedNow - lobby.timerStartTime;
-        const totalElapsed = currentSegment + (lobby.timerAccumulated ?? 0);
-        setSecondsRemaining(
-          Math.max(0, Math.ceil((totalDurationMs - totalElapsed) / 1000)),
-        );
-      }
+      setSecondsRemaining(
+        Math.max(0, Math.ceil((totalDurationMs - elapsedMs) / 1000)),
+      );
     };
 
     tick();
@@ -66,8 +62,7 @@ export function useGameTimer(lobby?: ClientLobbyState) {
   ]);
 
   const isGameInProgress = lobby?.status === "IN_PROGRESS";
-  const isTimeUp =
-    isGameInProgress && secondsRemaining !== null && secondsRemaining === 0;
+  const isTimeUp = isGameInProgress && secondsRemaining === 0;
   const timeLeft =
     isGameInProgress && secondsRemaining !== null
       ? formatTime(secondsRemaining)

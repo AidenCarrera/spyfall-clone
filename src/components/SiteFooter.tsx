@@ -11,10 +11,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
         aria-label="Footer navigation"
         className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
       >
-        <Link
-          href="/rules"
-          className="transition-colors hover:text-slate-300"
-        >
+        <Link href="/rules" className="transition-colors hover:text-slate-300">
           Rules
         </Link>
         <Link

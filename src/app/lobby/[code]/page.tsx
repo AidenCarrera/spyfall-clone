@@ -15,6 +15,10 @@ import { Button } from "@/src/components/Button";
 import { LobbyView } from "@/src/components/lobby/LobbyView";
 import { GameView } from "@/src/components/game/GameView";
 import { useGameTimer } from "@/src/hooks/useGameTimer";
+import { normalizeLobbyCode } from "@/src/lib/lobby-code";
+import { MAX_SPIES, MIN_PLAYERS } from "@/src/lib/game-rules";
+
+const KICKED_ERROR = "Player not found in lobby";
 
 export default function LobbyPage({
   params,
@@ -22,7 +26,7 @@ export default function LobbyPage({
   params: Promise<{ code: string }>;
 }) {
   const { code: routeCode } = use(params);
-  const code = routeCode.trim().toUpperCase();
+  const code = normalizeLobbyCode(routeCode);
   const router = useRouter();
   const [isStarting, setIsStarting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -31,8 +35,6 @@ export default function LobbyPage({
   const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("visibilityState" in document))
-      return;
     const handleVisibilityChange = () => {
       setIsTabVisible(document.visibilityState === "visible");
     };
@@ -51,9 +53,7 @@ export default function LobbyPage({
     ([, c]) => getLobbyStateAction(c),
     {
       refreshInterval: (latestData) => {
-        const isKicked =
-          lobbyError === "Player not found in lobby" ||
-          latestData?.error === "Player not found in lobby";
+        const isKicked = latestData?.error === KICKED_ERROR;
 
         if (!isTabVisible || isLeaving || isKicked) {
           return 0;
@@ -71,7 +71,10 @@ export default function LobbyPage({
   );
 
   const lobby = lobbyData?.lobby;
-  const error = lobbyError || lobbyData?.error;
+  // `lobbyError` is a thrown value, so it is narrowed to a renderable string.
+  const error: string | undefined = lobbyError
+    ? "Lost connection to the lobby. Please try again."
+    : lobbyData?.error;
   const isLoading = !lobbyData && !lobbyError;
   const { timeLeft, isTimeUp } = useGameTimer(lobby);
 
@@ -83,10 +86,10 @@ export default function LobbyPage({
 
   const handleStartGame = async () => {
     if (!lobby) return;
-    if (lobby.players.length === 3 && lobby.spyCount === 2) {
+    if (lobby.players.length === MIN_PLAYERS && lobby.spyCount === MAX_SPIES) {
       if (
         !confirm(
-          "Starting with 2 spies and only 3 players is not recommended. Are you sure you want to proceed?",
+          `Starting with ${MAX_SPIES} spies and only ${MIN_PLAYERS} players is not recommended. Are you sure you want to proceed?`,
         )
       )
         return;
@@ -117,6 +120,7 @@ export default function LobbyPage({
   };
 
   const handleReset = async () => {
+    if (!lobby) return;
     if (!isTimeUp && !confirm("Are you sure you want to end the game early?"))
       return;
     setIsResetting(true);
@@ -124,13 +128,13 @@ export default function LobbyPage({
     await mutate(
       {
         lobby: {
-          ...lobby!,
+          ...lobby,
           status: "LOBBY",
           location: undefined,
           timerStartTime: undefined,
           timerAccumulated: undefined,
           isPaused: false,
-          me: { ...lobby!.me, isSpy: undefined, role: undefined },
+          me: { ...lobby.me, isSpy: undefined, role: undefined },
         },
       },
       { revalidate: false },
@@ -185,7 +189,7 @@ export default function LobbyPage({
       );
     }
 
-    const isKicked = error === "Player not found in lobby";
+    const isKicked = error === KICKED_ERROR;
 
     return (
       <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
@@ -217,9 +221,7 @@ export default function LobbyPage({
   if (lobby.status === "LOBBY") {
     return (
       <LobbyView
-        code={code}
         lobby={lobby}
-        playerId={lobby.me.id}
         mutate={mutate}
         isStarting={isStarting}
         onStartGame={handleStartGame}

@@ -83,9 +83,12 @@ export default function RulesPage() {
               secretly the spy.
             </p>
             <p>
-              At the beginning of each round, every non-spy receives the same secret location along with a unique role connected to it.
-              The spy does not know the location and must uncover it by carefully listening to the conversation while avoiding suspicion.
-              Meanwhile, the non-spies work together to expose the spy without revealing too many clues.
+              At the beginning of each round, every non-spy receives the same
+              secret location along with a unique role connected to it. The spy
+              does not know the location and must uncover it by carefully
+              listening to the conversation while avoiding suspicion. Meanwhile,
+              the non-spies work together to expose the spy without revealing
+              too many clues.
             </p>
           </div>
         </header>
@@ -110,9 +113,7 @@ export default function RulesPage() {
             ))}
           </ol>
           <p className="mt-6 text-lg leading-relaxed text-slate-300">
-            Spyfall Online supports <strong>3-12 players</strong> with{
-              " "
-            }
+            Spyfall Online supports <strong>3-12 players</strong> with{" "}
             <strong>one or two spies</strong>.
           </p>
         </section>
@@ -126,9 +127,7 @@ export default function RulesPage() {
           </h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-6">
-              <h3 className="text-xl font-semibold text-blue-200">
-                Non-Spies
-              </h3>
+              <h3 className="text-xl font-semibold text-blue-200">Non-Spies</h3>
               <ul className="mt-4 list-disc space-y-2 pl-5 leading-relaxed text-slate-300 marker:text-blue-300">
                 <li>Know the secret location.</li>
                 <li>Receive a role related to that location.</li>
@@ -173,15 +172,14 @@ export default function RulesPage() {
               naturally shift toward whoever seems most suspicious.
             </p>
             <p>
-              The challenge is finding the right balance. Questions that are
-              too specific may reveal the location, while questions that are
-              too vague may make innocent players appear suspicious.
+              The challenge is finding the right balance. Questions that are too
+              specific may reveal the location, while questions that are too
+              vague may make innocent players appear suspicious.
             </p>
             <p>
-              Pay attention to hesitation, contradictions,
-              and answers that could fit almost anywhere. At the same time,
-              remember that honest players can make mistakes or become nervous
-              under pressure.
+              Pay attention to hesitation, contradictions, and answers that
+              could fit almost anywhere. At the same time, remember that honest
+              players can make mistakes or become nervous under pressure.
             </p>
           </div>
         </section>
@@ -247,7 +245,9 @@ export default function RulesPage() {
               <ul className="mt-4 list-disc space-y-2 pl-5 leading-relaxed text-slate-300 marker:text-purple-300">
                 <li>Listen more than you speak.</li>
                 <li>Match the level of detail used by the other players.</li>
-                <li>Build a picture of the location from every conversation.</li>
+                <li>
+                  Build a picture of the location from every conversation.
+                </li>
                 <li>
                   Guess the location only when you believe you have enough
                   information to be right.

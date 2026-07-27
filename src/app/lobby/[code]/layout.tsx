@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { LOBBY_CODE_PATTERN, normalizeLobbyCode } from "@/src/lib/lobby-code";
 
 export async function generateMetadata({
   params,
@@ -7,7 +8,7 @@ export async function generateMetadata({
   params: Promise<{ code: string }>;
 }): Promise<Metadata> {
   const { code } = await params;
-  const normalizedCode = code.trim().toUpperCase();
+  const normalizedCode = normalizeLobbyCode(code);
 
   return {
     title: "Lobby",
@@ -39,9 +40,9 @@ export default async function LobbyLayout({
   params: Promise<{ code: string }>;
 }>) {
   const { code } = await params;
-  const normalizedCode = code.trim().toUpperCase();
+  const normalizedCode = normalizeLobbyCode(code);
 
-  if (code !== normalizedCode && /^[A-Z0-9]{6}$/.test(normalizedCode)) {
+  if (code !== normalizedCode && LOBBY_CODE_PATTERN.test(normalizedCode)) {
     redirect(`/lobby/${normalizedCode}`);
   }
 

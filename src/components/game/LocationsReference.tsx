@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ClientLobbyState } from "@/src/app/actions";
-import gameData from "@/src/lib/game-data.json";
+import { ALL_LOCATIONS } from "@/src/lib/locations";
 
 interface LocationsReferenceProps {
   lobby: ClientLobbyState;
@@ -14,6 +14,12 @@ export function LocationsReference({
   isRevealed,
 }: LocationsReferenceProps) {
   const [crossedOff, setCrossedOff] = useState<Set<string>>(() => new Set());
+
+  // ALL_LOCATIONS is already sorted by name, so filtering preserves that order.
+  const locationsInPlay = useMemo(() => {
+    const selected = new Set(lobby.selectedLocations);
+    return ALL_LOCATIONS.filter((loc) => selected.has(loc.location));
+  }, [lobby.selectedLocations]);
 
   const toggleLocation = (location: string) => {
     setCrossedOff((current) => {
@@ -30,33 +36,31 @@ export function LocationsReference({
         Locations Reference
       </h3>
       <div className="grid grid-cols-2 gap-1">
-        {Object.entries(gameData)
-          .flatMap(([, locations]) => locations)
-          .filter((loc) => lobby.selectedLocations.includes(loc.location))
-          .sort((a, b) => a.location.localeCompare(b.location))
-          .map((loc) => {
-            const isCrossedOff = crossedOff.has(loc.location);
-            const isCurrentLocation =
-              lobby.location === loc.location && isRevealed && !lobby.me.isSpy;
+        {locationsInPlay.map((loc) => {
+          const isCrossedOff = crossedOff.has(loc.location);
+          const isCurrentLocation =
+            lobby.location === loc.location && isRevealed && !lobby.me.isSpy;
 
-            return (
-              <button
-                type="button"
-                key={loc.location}
-                aria-pressed={isCrossedOff}
-                className={`cursor-pointer select-none rounded p-2 text-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
-                  isCrossedOff
-                    ? "bg-black opacity-50 line-through"
-                    : isCurrentLocation
-                      ? "border border-blue-500/30 bg-blue-900/30 text-blue-200"
-                      : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                }`}
-                onClick={() => toggleLocation(loc.location)}
-              >
-                {loc.location}
-              </button>
-            );
-          })}
+          return (
+            <button
+              type="button"
+              key={loc.location}
+              aria-pressed={isCrossedOff}
+              className={`cursor-pointer select-none rounded p-2 text-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+                isCrossedOff
+                  ? // Deliberately low-contrast: a crossed-off tile should read
+                    // as untouched to anyone glancing at the screen.
+                    "bg-slate-800 text-slate-500 line-through decoration-slate-500/50 hover:bg-slate-700"
+                  : isCurrentLocation
+                    ? "border border-blue-500/30 bg-blue-900/30 text-blue-200"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+              }`}
+              onClick={() => toggleLocation(loc.location)}
+            >
+              {loc.location}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

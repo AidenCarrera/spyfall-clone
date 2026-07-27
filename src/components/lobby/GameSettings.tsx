@@ -8,22 +8,43 @@ import { Card } from "@/src/components/Card";
 import { Button } from "@/src/components/Button";
 import { EditLocationsModal } from "@/src/components/EditLocationsModal";
 import { updateSettingsAction, type ClientLobbyState } from "@/src/app/actions";
-import gameData from "@/src/lib/game-data.json";
+import {
+  MAX_SPIES,
+  MAX_TIMER_MINUTES,
+  MIN_SPIES,
+  MIN_TIMER_MINUTES,
+} from "@/src/lib/game-rules";
+
+const SPY_COUNT_OPTIONS = Array.from(
+  { length: MAX_SPIES - MIN_SPIES + 1 },
+  (_, index) => MIN_SPIES + index,
+);
+
+function SpyIcons({ count }: { count: number }) {
+  return (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: count }, (_, index) => (
+        <Image
+          key={index}
+          src="/Spy.png"
+          alt="Spy"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
+      ))}
+    </div>
+  );
+}
 
 interface GameSettingsProps {
-  code: string;
   lobby: ClientLobbyState;
-  isHost: boolean;
   mutate: KeyedMutator<{ lobby?: ClientLobbyState; error?: string }>;
 }
 
-export function GameSettings({
-  code,
-  lobby,
-  isHost,
-  mutate,
-}: GameSettingsProps) {
+export function GameSettings({ lobby, mutate }: GameSettingsProps) {
   const [isEditLocationsOpen, setIsEditLocationsOpen] = useState(false);
+  const isHost = lobby.me.isHost;
   const updateSettings = async (
     settings: Parameters<typeof updateSettingsAction>[1],
   ) => {
@@ -37,7 +58,7 @@ export function GameSettings({
           : current,
       { revalidate: false },
     );
-    await updateSettingsAction(code, settings);
+    await updateSettingsAction(lobby.code, settings);
     await mutate();
   };
 
@@ -48,12 +69,14 @@ export function GameSettings({
         {isHost ? (
           <div className="flex items-center gap-1">
             <button
-              onClick={async () => {
-                const newDuration = Math.max(1, lobby.timerDuration - 1);
-                await updateSettings({
-                  timerDuration: newDuration,
-                });
-              }}
+              onClick={() =>
+                updateSettings({
+                  timerDuration: Math.max(
+                    MIN_TIMER_MINUTES,
+                    lobby.timerDuration - 1,
+                  ),
+                })
+              }
               className="w-8 h-8 bg-slate-700 rounded hover:bg-slate-600 flex items-center justify-center text-xl font-bold"
             >
               -
@@ -62,12 +85,14 @@ export function GameSettings({
               {lobby.timerDuration}
             </span>
             <button
-              onClick={async () => {
-                const newDuration = Math.min(60, lobby.timerDuration + 1);
-                await updateSettings({
-                  timerDuration: newDuration,
-                });
-              }}
+              onClick={() =>
+                updateSettings({
+                  timerDuration: Math.min(
+                    MAX_TIMER_MINUTES,
+                    lobby.timerDuration + 1,
+                  ),
+                })
+              }
               className="w-8 h-8 bg-slate-700 rounded hover:bg-slate-600 flex items-center justify-center text-xl font-bold"
             >
               +
@@ -84,16 +109,14 @@ export function GameSettings({
         <label className="text-slate-400">Spies</label>
         <div className="flex items-center gap-2">
           {isHost ? (
-            ([1, 2] as const).map((count) => {
+            SPY_COUNT_OPTIONS.map((count) => {
               const isSelected = lobby.spyCount === count;
               return (
                 <button
                   key={count}
-                  onClick={async () => {
-                    await updateSettings({
-                      spyCount: count,
-                    });
-                  }}
+                  onClick={() => updateSettings({ spyCount: count })}
+                  aria-pressed={isSelected}
+                  aria-label={`${count} ${count === 1 ? "spy" : "spies"}`}
                   className={`flex items-center gap-4 p-2 rounded transition-colors hover:bg-slate-800 cursor-pointer ${
                     !isSelected ? "opacity-50" : ""
                   }`}
@@ -103,33 +126,13 @@ export function GameSettings({
                       isSelected ? "bg-blue-400" : "bg-transparent"
                     }`}
                   />
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: count }).map((_, i) => (
-                      <Image
-                        key={i}
-                        src="/Spy.png"
-                        alt="Spy"
-                        width={24}
-                        height={24}
-                        className="w-6 h-6"
-                      />
-                    ))}
-                  </div>
+                  <SpyIcons count={count} />
                 </button>
               );
             })
           ) : (
-            <div className="flex items-center gap-1 px-2 py-1">
-              {Array.from({ length: lobby.spyCount }).map((_, i) => (
-                <Image
-                  key={i}
-                  src="/Spy.png"
-                  alt="Spy"
-                  width={24}
-                  height={24}
-                  className="w-6 h-6"
-                />
-              ))}
+            <div className="px-2 py-1">
+              <SpyIcons count={lobby.spyCount} />
             </div>
           )}
         </div>
@@ -163,18 +166,10 @@ export function GameSettings({
             <EditLocationsModal
               isOpen={isEditLocationsOpen}
               onClose={() => setIsEditLocationsOpen(false)}
-              gameData={
-                gameData as Record<
-                  string,
-                  { location: string; roles: string[] }[]
-                >
-              }
               selectedLocations={lobby.selectedLocations}
-              onUpdate={async (newSelectedLocations) => {
-                await updateSettings({
-                  selectedLocations: newSelectedLocations,
-                });
-              }}
+              onUpdate={(selectedLocations) =>
+                updateSettings({ selectedLocations })
+              }
             />
           </>
         )}

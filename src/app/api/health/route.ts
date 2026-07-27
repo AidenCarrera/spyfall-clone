@@ -13,12 +13,13 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    // Log the cause server-side; the public response stays generic so Redis
+    // connection details are never exposed.
     console.error("Health check failed:", error);
     return NextResponse.json(
       {
         status: "error",
-        message:
-          error instanceof Error ? error.message : "Redis connection failed",
+        message: "Redis connection failed",
         timestamp: new Date().toISOString(),
       },
       { status: 500 },

@@ -1,6 +1,13 @@
 import { redis } from "./redis";
-import gameData from "./game-data.json";
-import { normalizeLobbyCode } from "./auth";
+import { DEFAULT_LOCATION_NAMES, findLocation } from "./locations";
+import { generateLobbyCode, normalizeLobbyCode } from "./lobby-code";
+import {
+  DEFAULT_SPY_COUNT,
+  DEFAULT_TIMER_MINUTES,
+  MAX_PLAYERS,
+  MIN_PLAYERS,
+  MIN_SPIES,
+} from "./game-rules";
 
 export interface Player {
   id: string;
@@ -13,7 +20,7 @@ export interface Player {
 
 export type GameStatus = "LOBBY" | "IN_PROGRESS";
 
-export interface GameSettings {
+export interface LobbySettings {
   selectedLocations: string[];
   timerDuration: number; // in minutes
   spyCount: number;
@@ -30,21 +37,10 @@ export interface Lobby {
   // Elapsed milliseconds accumulated before the current timer segment.
   timerAccumulated?: number;
   isPaused: boolean;
-  settings: GameSettings;
-}
-
-function generateCode(length: number = 6): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  settings: LobbySettings;
 }
 
 const LOBBY_TTL = 86400; // 24 hours in seconds
-const MAX_PLAYERS = 12;
-const MIN_PLAYERS = 3;
 const UPDATE_RETRY_ATTEMPTS = 30;
 
 const COMPARE_AND_SET_LOBBY_SCRIPT = `
@@ -69,6 +65,19 @@ return 1
 `;
 
 const getLobbyKey = (code: string) => `lobby:${normalizeLobbyCode(code)}`;
+
+const pickRandom = <T>(items: readonly T[]): T | undefined =>
+  items[Math.floor(Math.random() * items.length)];
+
+/** Fisher-Yates shuffle returning a new array of the same element references. */
+const shuffle = <T>(items: readonly T[]): T[] => {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+  }
+  return shuffled;
+};
 
 const waitForRetry = () =>
   new Promise((resolve) =>
@@ -163,7 +172,7 @@ export const store = {
     // Retry if the generated code is already taken.
     let lobby: Lobby | null = null;
     while (!lobby) {
-      const code = generateCode();
+      const code = generateLobbyCode();
       const candidate: Lobby = {
         code,
         version: 0,
@@ -171,9 +180,9 @@ export const store = {
         status: "LOBBY",
         isPaused: false,
         settings: {
-          selectedLocations: gameData.spyfall1.map((l) => l.location),
-          timerDuration: 8,
-          spyCount: 1,
+          selectedLocations: [...DEFAULT_LOCATION_NAMES],
+          timerDuration: DEFAULT_TIMER_MINUTES,
+          spyCount: DEFAULT_SPY_COUNT,
         },
       };
 
@@ -238,8 +247,6 @@ export const store = {
     return { lobby: result.lobby, playerId };
   },
 
-  getLobby,
-
   getLobbyForSession: async (code: string, sessionTokenHash: string) => {
     const lobby = await getLobby(code);
     if (!lobby) return { error: "not_found" as const };
@@ -270,30 +277,18 @@ export const store = {
       if (!caller?.isHost) return false;
       if (lobby.status !== "LOBBY") return false;
       if (lobby.players.length < MIN_PLAYERS) return false;
-      if (
-        lobby.settings.spyCount < 1 ||
-        lobby.settings.spyCount >= lobby.players.length
-      ) {
+
+      const spyCount = lobby.settings.spyCount;
+      if (spyCount < MIN_SPIES || spyCount >= lobby.players.length) {
         return false;
       }
 
-      let availableLocations = [...lobby.settings.selectedLocations];
-
-      if (availableLocations.length === 0) {
-        availableLocations = gameData.spyfall1.map((l) => l.location);
-      }
-
-      const randomLocIndex = Math.floor(
-        Math.random() * availableLocations.length,
-      );
-      const selectedLocationName = availableLocations[randomLocIndex];
-
-      const allLocations = Object.values(
-        gameData as Record<string, { location: string; roles: string[] }[]>,
-      ).flat();
-      const selectedLocation = allLocations.find(
-        (l) => l.location === selectedLocationName,
-      );
+      const availableLocations =
+        lobby.settings.selectedLocations.length > 0
+          ? lobby.settings.selectedLocations
+          : DEFAULT_LOCATION_NAMES;
+      const selectedLocationName = pickRandom(availableLocations);
+      const selectedLocation = findLocation(selectedLocationName);
 
       if (!selectedLocation) {
         console.error(
@@ -310,31 +305,17 @@ export const store = {
       lobby.timerAccumulated = 0;
       lobby.isPaused = false;
 
-      const roles = [...selectedLocation.roles];
-      const shuffledPlayers = [...lobby.players];
-      for (let i = shuffledPlayers.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = shuffledPlayers[i]!;
-        shuffledPlayers[i] = shuffledPlayers[j]!;
-        shuffledPlayers[j] = temp;
-      }
-
-      let spiesAssigned = 0;
-      const spyCount = lobby.settings.spyCount;
-      const playerMap = new Map(lobby.players.map((p) => [p.id, p]));
-
-      shuffledPlayers.forEach((player, index) => {
-        const originalPlayer = playerMap.get(player.id)!;
-
-        if (spiesAssigned < spyCount) {
-          originalPlayer.isSpy = true;
-          originalPlayer.role = undefined;
-          spiesAssigned++;
+      // Shuffling the players (rather than the roles) decides both who spies
+      // and which role each remaining player gets.
+      const { roles } = selectedLocation;
+      shuffle(lobby.players).forEach((player, index) => {
+        if (index < spyCount) {
+          player.isSpy = true;
+          player.role = undefined;
         } else {
-          originalPlayer.isSpy = false;
+          player.isSpy = false;
           // Reuse role names when players outnumber the available roles.
-          const roleIndex = index % roles.length;
-          originalPlayer.role = roles[roleIndex];
+          player.role = roles[index % roles.length];
         }
       });
     });
@@ -417,7 +398,7 @@ export const store = {
   updateSettings: async (
     code: string,
     sessionTokenHash: string,
-    settings: Partial<GameSettings>,
+    settings: Partial<LobbySettings>,
   ) => {
     return updateLobby(code, (lobby) => {
       const caller = getCaller(lobby, sessionTokenHash);

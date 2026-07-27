@@ -1,0 +1,8 @@
+.next/
+.pnpm-store/
+out/
+build/
+coverage/
+next-env.d.ts
+pnpm-lock.yaml
+*.tsbuildinfo

@@ -25,7 +25,7 @@ export default function CreateLobby() {
     setError("");
 
     try {
-      const result = await createLobbyAction(name);
+      const result = await createLobbyAction(name.trim());
       if (result.error) {
         setError(result.error);
       } else {

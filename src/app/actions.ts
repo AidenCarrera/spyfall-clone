@@ -4,38 +4,44 @@ import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { checkRateLimit } from "@/src/lib/ratelimit";
 import { store, type GameStatus } from "@/src/lib/store";
-import gameData from "@/src/lib/game-data.json";
+import { ALL_LOCATION_NAMES } from "@/src/lib/locations";
+import {
+  MAX_SPIES,
+  MAX_TIMER_MINUTES,
+  MIN_SPIES,
+  MIN_TIMER_MINUTES,
+} from "@/src/lib/game-rules";
+import { LOBBY_CODE_PATTERN, normalizeLobbyCode } from "@/src/lib/lobby-code";
 import {
   createSessionToken,
   getSessionCookieName,
   hashSessionToken,
-  normalizeLobbyCode,
 } from "@/src/lib/auth";
 
 const SESSION_MAX_AGE_SECONDS = 86400;
-const allLocationNames = new Set(
-  Object.values(
-    gameData as Record<string, { location: string; roles: string[] }[]>,
-  )
-    .flat()
-    .map((location) => location.location),
-);
 
-// Use the trusted proxy's final forwarded address for rate limiting.
+// Identifies the caller for rate limiting. Vercel's edge network overwrites
+// both headers with the real client address, so they cannot be spoofed in
+// production. `x-real-ip` is preferred because it is always a single address:
+// `x-forwarded-for` is a client-to-proxy list, where only the first entry is
+// the originating client. Falls back to a shared bucket for local development,
+// where neither header is set.
 async function getClientIp(): Promise<string> {
   const h = await headers();
-  const xff = h.get("x-forwarded-for");
-  if (xff) {
-    const last = xff.split(",").at(-1)?.trim();
-    if (last) return last;
-  }
-  return h.get("x-real-ip") ?? "127.0.0.1";
+
+  const realIp = h.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+
+  const clientIp = h.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (clientIp) return clientIp;
+
+  return "127.0.0.1";
 }
 
 const LobbyCodeSchema = z
   .string()
   .transform(normalizeLobbyCode)
-  .pipe(z.string().regex(/^[A-Z0-9]{6}$/, "Code must be 6 characters"));
+  .pipe(z.string().regex(LOBBY_CODE_PATTERN, "Code must be 6 characters"));
 
 const PlayerIdSchema = z.uuid("Invalid player");
 
@@ -59,21 +65,26 @@ const JoinLobbySchema = z.object({
 const SelectedLocationsSchema = z
   .array(z.string())
   .min(1, "Select at least one location")
-  .max(allLocationNames.size)
+  .max(ALL_LOCATION_NAMES.size)
   .refine(
     (locations) => new Set(locations).size === locations.length,
     "Locations must be unique",
   )
   .refine(
     (locations) =>
-      locations.every((location) => allLocationNames.has(location)),
+      locations.every((location) => ALL_LOCATION_NAMES.has(location)),
     "Invalid location selected",
   );
 
 const UpdateSettingsSchema = z
   .object({
-    timerDuration: z.number().int().min(1).max(60).optional(),
-    spyCount: z.number().int().min(1).max(2).optional(),
+    timerDuration: z
+      .number()
+      .int()
+      .min(MIN_TIMER_MINUTES)
+      .max(MAX_TIMER_MINUTES)
+      .optional(),
+    spyCount: z.number().int().min(MIN_SPIES).max(MAX_SPIES).optional(),
     selectedLocations: SelectedLocationsSchema.optional(),
   })
   .strict();

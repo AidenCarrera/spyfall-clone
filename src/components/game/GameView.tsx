@@ -58,29 +58,27 @@ export function GameView({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {isHost && (
-              <div className="flex gap-2">
-                {!isTimeUp && (
-                  <Button
-                    variant="secondary"
-                    onClick={onTogglePause}
-                    className="text-xs px-2 py-1"
-                  >
-                    {lobby.isPaused ? "Resume" : "Pause"}
-                  </Button>
-                )}
+          {isHost && (
+            <div className="flex items-center gap-2">
+              {!isTimeUp && (
                 <Button
-                  variant="danger"
-                  onClick={onReset}
+                  variant="secondary"
+                  onClick={onTogglePause}
                   className="text-xs px-2 py-1"
-                  disabled={isResetting}
                 >
-                  {isResetting ? "Ending..." : "End Game"}
+                  {lobby.isPaused ? "Resume" : "Pause"}
                 </Button>
-              </div>
-            )}
-          </div>
+              )}
+              <Button
+                variant="danger"
+                onClick={onReset}
+                className="text-xs px-2 py-1"
+                disabled={isResetting}
+              >
+                {isResetting ? "Ending..." : "End Game"}
+              </Button>
+            </div>
+          )}
         </div>
 
         <RoleCard
