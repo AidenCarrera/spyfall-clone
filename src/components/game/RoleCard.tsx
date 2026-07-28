@@ -1,8 +1,8 @@
 "use client";
 
-import { Card } from "@/src/components/Card";
-import { Button } from "@/src/components/Button";
-import type { ClientLobbyState } from "@/src/app/actions";
+import { Card } from "@/components/Card";
+import { Button } from "@/components/Button";
+import type { ClientLobbyState } from "@/app/actions";
 
 interface RoleCardProps {
   lobby: ClientLobbyState;

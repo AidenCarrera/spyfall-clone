@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/src/lib/site";
-import { SiteFooter } from "@/src/components/SiteFooter";
-import { LOBBY_CODE_PATTERN } from "@/src/lib/lobby-code";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { SiteFooter } from "@/components/SiteFooter";
+import { LOBBY_CODE_PATTERN } from "@/lib/lobby-code";
 
 export const metadata: Metadata = {
   title: "Rules",

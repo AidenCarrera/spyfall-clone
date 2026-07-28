@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ClientLobbyState } from "@/src/app/actions";
-import { ALL_LOCATIONS } from "@/src/lib/locations";
+import type { ClientLobbyState } from "@/app/actions";
+import { ALL_LOCATIONS } from "@/lib/locations";
 
 interface LocationsReferenceProps {
   lobby: ClientLobbyState;

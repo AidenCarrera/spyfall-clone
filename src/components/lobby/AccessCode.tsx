@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy, Link as LinkIcon } from "lucide-react";
-import { Card } from "@/src/components/Card";
+import { Card } from "@/components/Card";
 
 interface AccessCodeProps {
   code: string;

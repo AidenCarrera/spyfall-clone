@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ClientLobbyState } from "@/src/app/actions";
+import type { ClientLobbyState } from "@/app/actions";
 
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);

@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import type { KeyedMutator } from "swr";
-import { Card } from "@/src/components/Card";
+import { Card } from "@/components/Card";
 import {
   kickPlayerAction,
   promoteHostAction,
   type ClientLobbyState,
-} from "@/src/app/actions";
+} from "@/app/actions";
 
 type LobbyResponse = { lobby?: ClientLobbyState; error?: string };
 

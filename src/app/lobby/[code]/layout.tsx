@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { LOBBY_CODE_PATTERN, normalizeLobbyCode } from "@/src/lib/lobby-code";
+import { LOBBY_CODE_PATTERN, normalizeLobbyCode } from "@/lib/lobby-code";
 
 export async function generateMetadata({
   params,

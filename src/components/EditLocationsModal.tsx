@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "./Button";
 import { Modal } from "./Modal";
 import { X, Check } from "lucide-react";
-import { DEFAULT_LOCATION_NAMES, LOCATION_SETS } from "@/src/lib/locations";
+import { DEFAULT_LOCATION_NAMES, LOCATION_SETS } from "@/lib/locations";
 
 interface EditLocationsModalProps {
   isOpen: boolean;

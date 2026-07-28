@@ -2,21 +2,21 @@
 
 import { cookies, headers } from "next/headers";
 import { z } from "zod";
-import { checkRateLimit } from "@/src/lib/ratelimit";
-import { store, type GameStatus } from "@/src/lib/store";
-import { ALL_LOCATION_NAMES } from "@/src/lib/locations";
+import { checkRateLimit } from "@/lib/ratelimit";
+import { store, type GameStatus } from "@/lib/store";
+import { ALL_LOCATION_NAMES } from "@/lib/locations";
 import {
   MAX_SPIES,
   MAX_TIMER_MINUTES,
   MIN_SPIES,
   MIN_TIMER_MINUTES,
-} from "@/src/lib/game-rules";
-import { LOBBY_CODE_PATTERN, normalizeLobbyCode } from "@/src/lib/lobby-code";
+} from "@/lib/game-rules";
+import { LOBBY_CODE_PATTERN, normalizeLobbyCode } from "@/lib/lobby-code";
 import {
   createSessionToken,
   getSessionCookieName,
   hashSessionToken,
-} from "@/src/lib/auth";
+} from "@/lib/auth";
 
 const SESSION_MAX_AGE_SECONDS = 86400;
 

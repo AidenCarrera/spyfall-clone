@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/src/components/Button";
-import { GameHeader } from "@/src/components/GameHeader";
-import { HelpModal } from "@/src/components/HelpModal";
+import { Button } from "@/components/Button";
+import { GameHeader } from "@/components/GameHeader";
+import { HelpModal } from "@/components/HelpModal";
 import { RoleCard } from "./RoleCard";
 import { LocationsReference } from "./LocationsReference";
-import type { ClientLobbyState } from "@/src/app/actions";
+import type { ClientLobbyState } from "@/app/actions";
 
 interface GameViewProps {
   lobby: ClientLobbyState;

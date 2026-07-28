@@ -9,14 +9,14 @@ import {
   startGameAction,
   resetGameAction,
   togglePauseAction,
-} from "@/src/app/actions";
-import { Card } from "@/src/components/Card";
-import { Button } from "@/src/components/Button";
-import { LobbyView } from "@/src/components/lobby/LobbyView";
-import { GameView } from "@/src/components/game/GameView";
-import { useGameTimer } from "@/src/hooks/useGameTimer";
-import { normalizeLobbyCode } from "@/src/lib/lobby-code";
-import { MAX_SPIES, MIN_PLAYERS } from "@/src/lib/game-rules";
+} from "@/app/actions";
+import { Card } from "@/components/Card";
+import { Button } from "@/components/Button";
+import { LobbyView } from "@/components/lobby/LobbyView";
+import { GameView } from "@/components/game/GameView";
+import { useGameTimer } from "@/hooks/useGameTimer";
+import { normalizeLobbyCode } from "@/lib/lobby-code";
+import { MAX_SPIES, MIN_PLAYERS } from "@/lib/game-rules";
 
 const KICKED_ERROR = "Player not found in lobby";
 

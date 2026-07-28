@@ -4,16 +4,16 @@ import { useState } from "react";
 import Image from "next/image";
 import { Settings } from "lucide-react";
 import type { KeyedMutator } from "swr";
-import { Card } from "@/src/components/Card";
-import { Button } from "@/src/components/Button";
-import { EditLocationsModal } from "@/src/components/EditLocationsModal";
-import { updateSettingsAction, type ClientLobbyState } from "@/src/app/actions";
+import { Card } from "@/components/Card";
+import { Button } from "@/components/Button";
+import { EditLocationsModal } from "@/components/EditLocationsModal";
+import { updateSettingsAction, type ClientLobbyState } from "@/app/actions";
 import {
   MAX_SPIES,
   MAX_TIMER_MINUTES,
   MIN_SPIES,
   MIN_TIMER_MINUTES,
-} from "@/src/lib/game-rules";
+} from "@/lib/game-rules";
 
 const SPY_COUNT_OPTIONS = Array.from(
   { length: MAX_SPIES - MIN_SPIES + 1 },

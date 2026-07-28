@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import type { KeyedMutator } from "swr";
-import { Button } from "@/src/components/Button";
-import { GameHeader } from "@/src/components/GameHeader";
-import { HelpModal } from "@/src/components/HelpModal";
+import { Button } from "@/components/Button";
+import { GameHeader } from "@/components/GameHeader";
+import { HelpModal } from "@/components/HelpModal";
 import { AccessCode } from "./AccessCode";
 import { GameSettings } from "./GameSettings";
 import { PlayerList } from "./PlayerList";
-import type { ClientLobbyState } from "@/src/app/actions";
-import { MIN_PLAYERS } from "@/src/lib/game-rules";
+import type { ClientLobbyState } from "@/app/actions";
+import { MIN_PLAYERS } from "@/lib/game-rules";
 
 interface LobbyViewProps {
   lobby: ClientLobbyState;

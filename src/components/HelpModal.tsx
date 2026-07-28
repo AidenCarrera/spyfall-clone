@@ -36,8 +36,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       <div className="p-6 overflow-y-auto space-y-6 text-slate-300 leading-relaxed">
         <div className="space-y-2">
           <p>
-            <strong className="text-white">Spyfall</strong>{" "}
-            is a social
+            <strong className="text-white">Spyfall</strong> is a social
             deduction game where one player is the spy and doesn&apos;t know the
             location. Everyone else sees the location and has a role. The
             spy&apos;s goal is to figure out the location without being caught;

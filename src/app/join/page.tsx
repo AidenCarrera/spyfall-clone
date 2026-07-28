@@ -3,11 +3,11 @@
 import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getLobbyStateAction, joinLobbyAction } from "../actions";
-import { Button } from "@/src/components/Button";
-import { Input } from "@/src/components/Input";
-import { Card } from "@/src/components/Card";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { Card } from "@/components/Card";
 import Link from "next/link";
-import { LOBBY_CODE_LENGTH, normalizeLobbyCode } from "@/src/lib/lobby-code";
+import { LOBBY_CODE_LENGTH, normalizeLobbyCode } from "@/lib/lobby-code";
 
 function JoinLobbyContent() {
   const searchParams = useSearchParams();

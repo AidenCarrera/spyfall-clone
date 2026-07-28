@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, buttonClassName } from "@/src/components/Button";
-import { Card } from "@/src/components/Card";
-import { HelpModal } from "@/src/components/HelpModal";
-import { SiteFooter } from "@/src/components/SiteFooter";
+import { Button, buttonClassName } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { HelpModal } from "@/components/HelpModal";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export default function Home() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
