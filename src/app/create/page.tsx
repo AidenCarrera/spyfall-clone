@@ -1,73 +1,26 @@
-"use client";
+import type { Metadata } from "next";
+import { CreateForm } from "./CreateForm";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createLobbyAction } from "../actions";
-import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
-import { Card } from "@/components/Card";
-import Link from "next/link";
+const description =
+  "Create a private Spyfall room and invite friends with a shareable game code.";
 
-export default function CreateLobby() {
-  const [name, setName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
+export const metadata: Metadata = {
+  title: "Create Game",
+  description,
+  alternates: {
+    canonical: "/create",
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
+  openGraph: {
+    title: "Create Game | Spyfall",
+    description,
+    url: "/create",
+  },
+};
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      setError("Please enter your name");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const result = await createLobbyAction(name.trim());
-      if (result.error) {
-        setError(result.error);
-      } else {
-        router.push(`/lobby/${result.code}`);
-      }
-    } catch {
-      setError("Failed to create lobby");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-linear-to-b from-slate-900 to-slate-950">
-      <div className="w-full max-w-md">
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="text-slate-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            ← Back to Home
-          </Link>
-        </div>
-
-        <Card>
-          <h1 className="mb-4 text-xl font-bold text-white">Create Game</h1>
-          <form onSubmit={handleCreate} className="space-y-6">
-            <Input
-              label="Your Name"
-              placeholder="Enter your display name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={error}
-              autoFocus
-            />
-
-            <Button type="submit" fullWidth disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Lobby"}
-            </Button>
-          </form>
-        </Card>
-      </div>
-    </main>
-  );
+export default function CreatePage() {
+  return <CreateForm />;
 }

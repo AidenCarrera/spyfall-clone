@@ -4,9 +4,9 @@ import { LOBBY_CODE_PATTERN, normalizeLobbyCode } from "@/lib/lobby-code";
 import { getSessionTokenHash } from "@/lib/session";
 import type { ClientLobbyState, LobbyStateResponse } from "@/lib/lobby-state";
 
-// Polled by the lobby UI, so it must always reflect live Redis state.
-export const dynamic = "force-dynamic";
-
+// GET Route Handlers are uncached by default, and reading the session cookie
+// forces dynamic rendering, so no route config is needed. The `no-store` header
+// below is what actually stops CDNs and browsers caching a polled response.
 function lobbyStateResponse(body: LobbyStateResponse, status: number) {
   return NextResponse.json(body, {
     status,

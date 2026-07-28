@@ -8,9 +8,7 @@ interface LocationsReferenceProps {
   lobby: ClientLobbyState;
 }
 
-export function LocationsReference({
-  lobby,
-}: LocationsReferenceProps) {
+export function LocationsReference({ lobby }: LocationsReferenceProps) {
   const [crossedOff, setCrossedOff] = useState<Set<string>>(() => new Set());
 
   // ALL_LOCATIONS is already sorted by name, so filtering preserves that order.

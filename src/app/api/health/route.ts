@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
 
-export const dynamic = "force-dynamic";
-
+// GET Route Handlers are uncached by default, so no route config is needed.
 export async function GET() {
   try {
     // Perform a lightweight Redis command to ensure connectivity.
