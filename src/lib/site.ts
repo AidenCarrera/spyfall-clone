@@ -1,4 +1,4 @@
-const configuredSiteUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+const configuredSiteUrl = process.env.SITE_URL?.trim();
 
 export const SITE_URL = (
   configuredSiteUrl || "https://spyfall-clone.vercel.app"
