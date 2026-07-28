@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/src/lib/site";
 import { SiteFooter } from "@/src/components/SiteFooter";
+import { LOBBY_CODE_PATTERN } from "@/src/lib/lobby-code";
 
 export const metadata: Metadata = {
   title: "Rules",
@@ -62,15 +63,34 @@ const faqs = [
   },
 ];
 
-export default function RulesPage() {
+function getReturnPath(returnTo: string | string[] | undefined) {
+  if (typeof returnTo !== "string") return "/";
+
+  const match = returnTo.match(/^\/lobby\/([^/?#]+)$/);
+  const lobbyCode = match?.[1];
+
+  return lobbyCode && LOBBY_CODE_PATTERN.test(lobbyCode.toUpperCase())
+    ? returnTo
+    : "/";
+}
+
+export default async function RulesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string | string[] }>;
+}) {
+  const returnPath = getReturnPath((await searchParams).returnTo);
+  const isReturningToLobby = returnPath !== "/";
+
   return (
     <main className="min-h-screen bg-linear-to-b from-slate-900 to-slate-950 px-4 py-12 sm:py-16">
       <article className="mx-auto max-w-3xl">
         <Link
-          href="/"
+          href={returnPath}
           className="font-medium text-slate-300 transition-colors hover:text-white"
         >
-          ← Back to Spyfall
+          &larr;{" "}
+          {isReturningToLobby ? "Return to lobby or game" : "Back to Spyfall"}
         </Link>
 
         <header className="mt-10 border-b border-slate-800 pb-10">

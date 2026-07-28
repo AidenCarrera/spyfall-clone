@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "./Button";
 import { Modal } from "./Modal";
 
@@ -9,6 +10,8 @@ interface HelpModalProps {
 }
 
 export function HelpModal({ isOpen, onClose }: HelpModalProps) {
+  const pathname = usePathname();
+
   if (!isOpen) return null;
 
   return (
@@ -33,7 +36,8 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       <div className="p-6 overflow-y-auto space-y-6 text-slate-300 leading-relaxed">
         <div className="space-y-2">
           <p>
-            <strong className="text-white">Spyfall</strong> is a social
+            <strong className="text-white">Spyfall</strong>{" "}
+            is a social
             deduction game where one player is the spy and doesn&apos;t know the
             location. Everyone else sees the location and has a role. The
             spy&apos;s goal is to figure out the location without being caught;
@@ -112,7 +116,12 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           Close
         </Button>
         <Link
-          href="/rules"
+          href={{
+            pathname: "/rules",
+            query: pathname.startsWith("/lobby/")
+              ? { returnTo: pathname }
+              : undefined,
+          }}
           className="rounded-lg bg-blue-600 px-6 py-3 text-center font-semibold text-white transition-all duration-200 hover:bg-blue-500 active:scale-95"
         >
           View Full Rules
