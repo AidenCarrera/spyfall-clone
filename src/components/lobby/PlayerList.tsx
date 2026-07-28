@@ -3,17 +3,12 @@
 import { useState } from "react";
 import type { KeyedMutator } from "swr";
 import { Card } from "@/components/Card";
-import {
-  kickPlayerAction,
-  promoteHostAction,
-  type ClientLobbyState,
-} from "@/app/actions";
-
-type LobbyResponse = { lobby?: ClientLobbyState; error?: string };
+import { kickPlayerAction, promoteHostAction } from "@/app/actions";
+import type { ClientLobbyState, LobbyStateResponse } from "@/lib/lobby-state";
 
 interface PlayerListProps {
   lobby: ClientLobbyState;
-  mutate: KeyedMutator<LobbyResponse>;
+  mutate: KeyedMutator<LobbyStateResponse>;
 }
 
 export function PlayerList({ lobby, mutate }: PlayerListProps) {

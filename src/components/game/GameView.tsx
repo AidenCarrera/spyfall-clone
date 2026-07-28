@@ -6,7 +6,7 @@ import { GameHeader } from "@/components/GameHeader";
 import { HelpModal } from "@/components/HelpModal";
 import { RoleCard } from "./RoleCard";
 import { LocationsReference } from "./LocationsReference";
-import type { ClientLobbyState } from "@/app/actions";
+import type { ClientLobbyState } from "@/lib/lobby-state";
 
 interface GameViewProps {
   lobby: ClientLobbyState;
@@ -87,7 +87,7 @@ export function GameView({
           setIsRevealed={setIsRevealed}
         />
 
-        <LocationsReference lobby={lobby} isRevealed={isRevealed} />
+        <LocationsReference lobby={lobby} />
 
         <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       </div>

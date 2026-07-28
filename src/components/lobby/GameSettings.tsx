@@ -7,7 +7,8 @@ import type { KeyedMutator } from "swr";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { EditLocationsModal } from "@/components/EditLocationsModal";
-import { updateSettingsAction, type ClientLobbyState } from "@/app/actions";
+import { updateSettingsAction } from "@/app/actions";
+import type { ClientLobbyState, LobbyStateResponse } from "@/lib/lobby-state";
 import {
   MAX_SPIES,
   MAX_TIMER_MINUTES,
@@ -39,7 +40,7 @@ function SpyIcons({ count }: { count: number }) {
 
 interface GameSettingsProps {
   lobby: ClientLobbyState;
-  mutate: KeyedMutator<{ lobby?: ClientLobbyState; error?: string }>;
+  mutate: KeyedMutator<LobbyStateResponse>;
 }
 
 export function GameSettings({ lobby, mutate }: GameSettingsProps) {

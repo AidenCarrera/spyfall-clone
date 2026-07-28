@@ -1,9 +1,9 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/ratelimit";
-import { store, type GameStatus } from "@/lib/store";
+import { store } from "@/lib/store";
 import { ALL_LOCATION_NAMES } from "@/lib/locations";
 import {
   MAX_SPIES,
@@ -12,13 +12,12 @@ import {
   MIN_TIMER_MINUTES,
 } from "@/lib/game-rules";
 import { LOBBY_CODE_PATTERN, normalizeLobbyCode } from "@/lib/lobby-code";
+import { createSessionToken, hashSessionToken } from "@/lib/auth";
 import {
-  createSessionToken,
-  getSessionCookieName,
-  hashSessionToken,
-} from "@/lib/auth";
-
-const SESSION_MAX_AGE_SECONDS = 86400;
+  deleteSessionCookie,
+  getSessionTokenHash,
+  setSessionCookie,
+} from "@/lib/session";
 
 // Identifies the caller for rate limiting. Vercel's edge network overwrites
 // both headers with the real client address, so they cannot be spoofed in
@@ -91,30 +90,6 @@ const UpdateSettingsSchema = z
 
 type MutationResult =
   { success: true } | { success: false; reason: "not_found" | "rejected" };
-
-async function setSessionCookie(code: string, sessionToken: string) {
-  const cookieStore = await cookies();
-  cookieStore.set({
-    name: getSessionCookieName(code),
-    value: sessionToken,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
-  });
-}
-
-async function deleteSessionCookie(code: string) {
-  const cookieStore = await cookies();
-  cookieStore.delete(getSessionCookieName(code));
-}
-
-async function getSessionTokenHash(code: string): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(getSessionCookieName(code))?.value;
-  return token ? hashSessionToken(token) : undefined;
-}
 
 async function runMutationAction(
   actionName: string,
@@ -317,86 +292,4 @@ export async function togglePauseAction(code: string) {
     (normalizedCode, sessionTokenHash) =>
       store.togglePause(normalizedCode, sessionTokenHash),
   );
-}
-
-interface ClientPlayer {
-  id: string;
-  name: string;
-  isHost: boolean;
-  role?: string;
-  isSpy?: boolean;
-}
-
-export interface ClientLobbyState {
-  code: string;
-  players: Pick<ClientPlayer, "name" | "isHost" | "id">[];
-  status: GameStatus;
-  me: ClientPlayer;
-  location?: string;
-  timerStartTime?: number;
-  timerAccumulated?: number;
-  isPaused: boolean;
-  timerDuration: number;
-  spyCount: number;
-  selectedLocations: string[];
-  serverTime: number;
-}
-
-export async function getLobbyStateAction(
-  code: string,
-): Promise<{ lobby?: ClientLobbyState; error?: string }> {
-  try {
-    const parsedCode = LobbyCodeSchema.safeParse(code);
-    if (!parsedCode.success) return { error: "Invalid lobby code" };
-
-    const sessionTokenHash = await getSessionTokenHash(parsedCode.data);
-    if (!sessionTokenHash) return { error: "Session not found" };
-
-    const sessionResult = await store.getLobbyForSession(
-      parsedCode.data,
-      sessionTokenHash,
-    );
-    if ("error" in sessionResult) {
-      return {
-        error:
-          sessionResult.error === "not_found"
-            ? "Lobby not found"
-            : "Player not found in lobby",
-      };
-    }
-
-    const { lobby, player: me } = sessionResult;
-    const clientLobby: ClientLobbyState = {
-      code: lobby.code,
-      players: lobby.players.map((player) => ({
-        name: player.name,
-        isHost: player.isHost,
-        id: player.id,
-      })),
-      status: lobby.status,
-      me: {
-        id: me.id,
-        name: me.name,
-        isHost: me.isHost,
-        role: me.role,
-        isSpy: me.isSpy,
-      },
-      timerStartTime: lobby.timerStartTime,
-      timerAccumulated: lobby.timerAccumulated,
-      isPaused: lobby.isPaused,
-      timerDuration: lobby.settings.timerDuration,
-      spyCount: lobby.settings.spyCount,
-      selectedLocations: lobby.settings.selectedLocations,
-      serverTime: Date.now(),
-    };
-
-    if (lobby.status === "IN_PROGRESS" && !me.isSpy) {
-      clientLobby.location = lobby.location;
-    }
-
-    return { lobby: clientLobby };
-  } catch (error) {
-    console.error("getLobbyStateAction error:", error);
-    return { error: "Failed to fetch lobby state." };
-  }
 }

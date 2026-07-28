@@ -1,17 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ClientLobbyState } from "@/app/actions";
+import type { ClientLobbyState } from "@/lib/lobby-state";
 import { ALL_LOCATIONS } from "@/lib/locations";
 
 interface LocationsReferenceProps {
   lobby: ClientLobbyState;
-  isRevealed: boolean;
 }
 
 export function LocationsReference({
   lobby,
-  isRevealed,
 }: LocationsReferenceProps) {
   const [crossedOff, setCrossedOff] = useState<Set<string>>(() => new Set());
 
@@ -38,8 +36,6 @@ export function LocationsReference({
       <div className="grid grid-cols-2 gap-1">
         {locationsInPlay.map((loc) => {
           const isCrossedOff = crossedOff.has(loc.location);
-          const isCurrentLocation =
-            lobby.location === loc.location && isRevealed && !lobby.me.isSpy;
 
           return (
             <button
@@ -51,9 +47,7 @@ export function LocationsReference({
                   ? // Deliberately low-contrast: a crossed-off tile should read
                     // as untouched to anyone glancing at the screen.
                     "bg-slate-800 text-slate-500 line-through decoration-slate-500/50 hover:bg-slate-700"
-                  : isCurrentLocation
-                    ? "border border-blue-500/30 bg-blue-900/30 text-blue-200"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                  : "bg-slate-800 text-slate-400 hover:bg-slate-700"
               }`}
               onClick={() => toggleLocation(loc.location)}
             >

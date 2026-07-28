@@ -8,12 +8,12 @@ import { HelpModal } from "@/components/HelpModal";
 import { AccessCode } from "./AccessCode";
 import { GameSettings } from "./GameSettings";
 import { PlayerList } from "./PlayerList";
-import type { ClientLobbyState } from "@/app/actions";
+import type { ClientLobbyState, LobbyStateResponse } from "@/lib/lobby-state";
 import { MIN_PLAYERS } from "@/lib/game-rules";
 
 interface LobbyViewProps {
   lobby: ClientLobbyState;
-  mutate: KeyedMutator<{ lobby?: ClientLobbyState; error?: string }>;
+  mutate: KeyedMutator<LobbyStateResponse>;
   isStarting?: boolean;
   onStartGame: () => void;
   onLeave: () => void;

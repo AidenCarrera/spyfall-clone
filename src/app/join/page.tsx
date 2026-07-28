@@ -2,7 +2,8 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getLobbyStateAction, joinLobbyAction } from "../actions";
+import { joinLobbyAction } from "../actions";
+import { fetchLobbyState } from "@/lib/lobby-state";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Card } from "@/components/Card";
@@ -24,11 +25,14 @@ function JoinLobbyContent() {
     if (!normalizedUrlCode) return;
 
     let isCancelled = false;
-    getLobbyStateAction(normalizedUrlCode).then((result) => {
-      if (!isCancelled && result.lobby) {
-        router.replace(`/lobby/${result.lobby.code}`);
-      }
-    });
+    fetchLobbyState(normalizedUrlCode)
+      .then((result) => {
+        if (!isCancelled && result.lobby) {
+          router.replace(`/lobby/${result.lobby.code}`);
+        }
+      })
+      // No existing session for this code; fall through to the join form.
+      .catch(() => {});
 
     return () => {
       isCancelled = true;

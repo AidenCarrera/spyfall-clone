@@ -4,12 +4,12 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import {
-  getLobbyStateAction,
   leaveLobbyAction,
   startGameAction,
   resetGameAction,
   togglePauseAction,
 } from "@/app/actions";
+import { fetchLobbyState } from "@/lib/lobby-state";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { LobbyView } from "@/components/lobby/LobbyView";
@@ -50,7 +50,7 @@ export default function LobbyPage({
     mutate,
   } = useSWR(
     !isLeaving ? ["lobby", code] : null,
-    ([, c]) => getLobbyStateAction(c),
+    ([, c]) => fetchLobbyState(c),
     {
       refreshInterval: (latestData) => {
         const isKicked = latestData?.error === KICKED_ERROR;
