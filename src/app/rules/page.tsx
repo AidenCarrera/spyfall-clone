@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -63,14 +63,16 @@ const faqs = [
   },
 ];
 
-function getReturnPath(returnTo: string | string[] | undefined) {
+function getReturnPath(returnTo: string | string[] | undefined): Route {
   if (typeof returnTo !== "string") return "/";
 
   const match = returnTo.match(/^\/lobby\/([^/?#]+)$/);
   const lobbyCode = match?.[1];
 
+  // The cast is safe because the checks above narrow this to exactly
+  // `/lobby/<valid code>`, which typedRoutes cannot infer from a runtime test.
   return lobbyCode && LOBBY_CODE_PATTERN.test(lobbyCode.toUpperCase())
-    ? returnTo
+    ? (returnTo as Route)
     : "/";
 }
 

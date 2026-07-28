@@ -16,6 +16,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Type-checks `Link` hrefs and `router.push` against real routes.
+  typedRoutes: true,
   async headers() {
     return [
       {
