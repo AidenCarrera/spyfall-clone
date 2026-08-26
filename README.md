@@ -14,7 +14,7 @@ The goal of this project is to make playing Spyfall with friends quick and easy.
 
 ## Live Demo
 
-**Play it here:** [spyfall-clone.vercel.app](https://spyfall-clone.vercel.app/)
+**Play it here:** [spyfall.aidencarrera.com](https://spyfall.aidencarrera.com/)
 
 ---
 

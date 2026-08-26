@@ -1,7 +1,7 @@
 const configuredSiteUrl = process.env.SITE_URL?.trim();
 
 export const SITE_URL = (
-  configuredSiteUrl || "https://spyfall-clone.vercel.app"
+  configuredSiteUrl || "https://spyfall.aidencarrera.com"
 ).replace(/\/$/, "");
 
 export const SITE_NAME = "Spyfall";
