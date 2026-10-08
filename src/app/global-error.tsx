@@ -25,8 +25,10 @@ export default function GlobalError({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#0f172a",
-          color: "#f8fafc",
+          backgroundColor: "#0b0d14",
+          backgroundImage:
+            "radial-gradient(ellipse 90% 55% at 50% -12%, rgb(217 43 57 / 0.2), transparent 62%)",
+          color: "#e8e9ef",
           fontFamily: "system-ui, sans-serif",
           textAlign: "center",
           padding: "1rem",
@@ -34,10 +36,18 @@ export default function GlobalError({
         }}
       >
         <main>
-          <h1 style={{ margin: 0, fontSize: "1.875rem", fontWeight: 700 }}>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "2rem",
+              fontWeight: 800,
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
+            }}
+          >
             Something went wrong
           </h1>
-          <p style={{ marginTop: "0.75rem", color: "#94a3b8" }}>
+          <p style={{ marginTop: "0.75rem", color: "#a8adbf" }}>
             Spyfall failed to load. Please try again.
           </p>
           <button
@@ -46,12 +56,16 @@ export default function GlobalError({
             style={{
               marginTop: "1.5rem",
               cursor: "pointer",
-              borderRadius: "0.5rem",
+              borderRadius: "0.75rem",
               border: "none",
-              backgroundColor: "#2563eb",
-              padding: "0.75rem 1.5rem",
+              backgroundImage: "linear-gradient(to bottom, #d92b39, #b81d2a)",
+              boxShadow:
+                "inset 0 1px 0 rgb(255 255 255 / 0.28), 0 4px 0 #660d16",
+              padding: "0.875rem 1.75rem",
               fontSize: "1rem",
-              fontWeight: 600,
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
               color: "#ffffff",
             }}
           >

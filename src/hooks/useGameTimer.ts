@@ -68,5 +68,9 @@ export function useGameTimer(lobby?: ClientLobbyState) {
       ? formatTime(secondsRemaining)
       : "";
 
-  return { timeLeft, isTimeUp };
+  return {
+    timeLeft,
+    isTimeUp,
+    secondsRemaining: isGameInProgress ? secondsRemaining : null,
+  };
 }

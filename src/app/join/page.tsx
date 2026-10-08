@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { JoinForm } from "./JoinForm";
 
 const description =
@@ -24,14 +25,7 @@ export const metadata: Metadata = {
 
 export default function JoinPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-          Loading...
-        </main>
-      }
-    >
-      {/* JoinForm reads useSearchParams, so it must sit under a Suspense boundary. */}
+    <Suspense fallback={<LoadingScreen />}>
       <JoinForm />
     </Suspense>
   );

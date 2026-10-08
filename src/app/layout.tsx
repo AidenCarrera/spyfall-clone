@@ -1,6 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  Big_Shoulders,
+  Big_Shoulders_Stencil,
+  Geist,
+  Geist_Mono,
+} from "next/font/google";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { Providers } from "@/components/Providers";
 import { VercelAnalytics } from "@/components/VercelAnalytics";
 import "./globals.css";
 
@@ -12,6 +18,18 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const bigShoulders = Big_Shoulders({
+  variable: "--font-big-shoulders",
+  subsets: ["latin"],
+  axes: ["opsz"],
+});
+
+const bigShouldersStencil = Big_Shoulders_Stencil({
+  variable: "--font-big-shoulders-stencil",
+  subsets: ["latin"],
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -66,7 +84,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#0b0d14",
+  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
 };
@@ -77,11 +96,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${bigShoulders.variable} ${bigShouldersStencil.variable}`}
+    >
+      <body className="antialiased">
+        <div aria-hidden="true" className="app-backdrop" />
+        <Providers>{children}</Providers>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

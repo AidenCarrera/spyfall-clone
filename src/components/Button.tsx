@@ -1,46 +1,72 @@
 import React from "react";
+import { cn } from "@/lib/ui";
 
-export type ButtonVariant = "primary" | "secondary" | "danger" | "outline";
+export type ButtonVariant =
+  "primary" | "secondary" | "danger" | "outline" | "ghost";
+
+export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   fullWidth?: boolean;
 }
 
 const baseStyles =
-  "inline-flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed";
+  "relative inline-flex select-none items-center justify-center whitespace-nowrap font-display font-bold uppercase tracking-[0.08em] transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-150 ease-out disabled:pointer-events-none disabled:opacity-45 disabled:saturate-50";
+
+const sizes: Record<ButtonSize, string> = {
+  sm: "h-9 gap-1.5 rounded-lg px-3.5 text-[0.95rem]",
+  md: "h-12 gap-2 rounded-xl px-6 text-lg",
+  lg: "h-14 gap-2.5 rounded-xl px-7 text-xl",
+};
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20",
-  secondary: "bg-slate-700 hover:bg-slate-600 text-slate-100",
-  danger: "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/20",
+    "bg-linear-to-b from-crimson-500 to-crimson-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.28),0_4px_0_var(--color-crimson-800),0_10px_20px_-12px_rgb(217_43_57/0.35)] hover:-translate-y-px hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),0_5px_0_var(--color-crimson-800),0_12px_24px_-12px_rgb(217_43_57/0.45)] active:translate-y-[3px] active:shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_1px_0_var(--color-crimson-800),0_4px_10px_-8px_rgb(217_43_57/0.3)]",
+  secondary:
+    "border border-white/10 bg-linear-to-b from-ink-700 to-ink-800 text-paper-100 shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_4px_0_var(--color-ink-950)] hover:-translate-y-px hover:border-white/20 hover:from-ink-600 hover:to-ink-700 active:translate-y-[3px] active:shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_1px_0_var(--color-ink-950)]",
+  danger:
+    "border border-crimson-400/35 bg-crimson-500/12 text-crimson-300 hover:border-crimson-400/60 hover:bg-crimson-500/22 hover:text-crimson-200 active:translate-y-px",
   outline:
-    "border-2 border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white bg-transparent",
+    "border border-ink-500 bg-transparent text-ink-200 hover:border-ink-400 hover:bg-white/[0.04] hover:text-white active:translate-y-px",
+  ghost:
+    "bg-transparent text-ink-300 hover:bg-white/[0.06] hover:text-paper-50 active:translate-y-px",
 };
 
 export function buttonClassName({
   variant = "primary",
+  size = "md",
   fullWidth = false,
   className = "",
 }: {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   fullWidth?: boolean;
   className?: string;
 } = {}) {
-  return `${baseStyles} ${variants[variant]} ${fullWidth ? "w-full" : ""} ${className}`;
+  return cn(
+    baseStyles,
+    sizes[size],
+    variants[variant],
+    fullWidth && "w-full",
+    className,
+  );
 }
 
 export const Button: React.FC<ButtonProps> = ({
   children,
   variant = "primary",
+  size = "md",
   fullWidth = false,
   className = "",
+  type = "button",
   ...props
 }) => {
   return (
     <button
-      className={buttonClassName({ variant, fullWidth, className })}
+      type={type}
+      className={buttonClassName({ variant, size, fullWidth, className })}
       aria-label={
         props["aria-label"] ||
         (typeof children === "string" ? children : undefined)

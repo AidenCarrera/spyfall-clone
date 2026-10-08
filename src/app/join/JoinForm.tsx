@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
 import { joinLobbyAction } from "@/app/actions";
 import { fetchLobbyState } from "@/lib/lobby-state";
 import { Button } from "@/components/Button";
+import { FormScreen } from "@/components/FormScreen";
 import { Input } from "@/components/Input";
-import { Card } from "@/components/Card";
-import Link from "next/link";
 import { LOBBY_CODE_LENGTH, normalizeLobbyCode } from "@/lib/lobby-code";
 
 export function JoinForm() {
@@ -65,46 +65,39 @@ export function JoinForm() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-linear-to-b from-slate-900 to-slate-950">
-      <div className="w-full max-w-md">
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="text-slate-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            ← Back to Home
-          </Link>
-        </div>
+    <FormScreen title="Join Game">
+      <form onSubmit={handleJoin} className="mt-7 space-y-6">
+        {!normalizedUrlCode && (
+          <Input
+            label="Room Code"
+            placeholder={`Enter ${LOBBY_CODE_LENGTH}-character code`}
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            maxLength={LOBBY_CODE_LENGTH}
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            // Offset left padding to keep tracked text centered
+            className="h-16 pl-[calc(1rem+0.4em)] text-center font-mono text-3xl font-bold tracking-[0.4em] text-brass-300 placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:tracking-normal"
+          />
+        )}
 
-        <Card>
-          <h1 className="mb-4 text-xl font-bold text-white">Join Game</h1>
-          <form onSubmit={handleJoin} className="space-y-6">
-            {!normalizedUrlCode && (
-              <Input
-                label="Room Code"
-                placeholder={`Enter ${LOBBY_CODE_LENGTH}-character code`}
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                maxLength={LOBBY_CODE_LENGTH}
-                autoCapitalize="characters"
-                spellCheck={false}
-              />
-            )}
+        <Input
+          label="Your Name"
+          placeholder="Enter your display name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={error}
+          autoComplete="nickname"
+        />
 
-            <Input
-              label="Your Name"
-              placeholder="Enter your display name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={error}
-            />
-
-            <Button type="submit" fullWidth disabled={isLoading}>
-              {isLoading ? "Joining..." : "Join Game"}
-            </Button>
-          </form>
-        </Card>
-      </div>
-    </main>
+        <Button type="submit" size="lg" fullWidth disabled={isLoading}>
+          {isLoading && (
+            <LoaderCircle aria-hidden="true" className="size-5 animate-spin" />
+          )}
+          {isLoading ? "Joining..." : "Join Game"}
+        </Button>
+      </form>
+    </FormScreen>
   );
 }

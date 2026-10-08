@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
 import { createLobbyAction } from "@/app/actions";
 import { Button } from "@/components/Button";
+import { FormScreen } from "@/components/FormScreen";
 import { Input } from "@/components/Input";
-import { Card } from "@/components/Card";
-import Link from "next/link";
 
 export function CreateForm() {
   const [name, setName] = useState("");
@@ -39,35 +39,25 @@ export function CreateForm() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-linear-to-b from-slate-900 to-slate-950">
-      <div className="w-full max-w-md">
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="text-slate-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            ← Back to Home
-          </Link>
-        </div>
+    <FormScreen title="Create Game">
+      <form onSubmit={handleCreate} className="mt-7 space-y-6">
+        <Input
+          label="Your Name"
+          placeholder="Enter your display name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={error}
+          autoComplete="nickname"
+          autoFocus
+        />
 
-        <Card>
-          <h1 className="mb-4 text-xl font-bold text-white">Create Game</h1>
-          <form onSubmit={handleCreate} className="space-y-6">
-            <Input
-              label="Your Name"
-              placeholder="Enter your display name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={error}
-              autoFocus
-            />
-
-            <Button type="submit" fullWidth disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Lobby"}
-            </Button>
-          </form>
-        </Card>
-      </div>
-    </main>
+        <Button type="submit" size="lg" fullWidth disabled={isLoading}>
+          {isLoading && (
+            <LoaderCircle aria-hidden="true" className="size-5 animate-spin" />
+          )}
+          {isLoading ? "Creating..." : "Create Lobby"}
+        </Button>
+      </form>
+    </FormScreen>
   );
 }
