@@ -24,12 +24,15 @@ const bigShoulders = Big_Shoulders({
   variable: "--font-big-shoulders",
   subsets: ["latin"],
   axes: ["opsz"],
+  // Fallback metrics are hand-written in globals.css.
+  adjustFontFallback: false,
 });
 
 const bigShouldersStencil = Big_Shoulders_Stencil({
   variable: "--font-big-shoulders-stencil",
   subsets: ["latin"],
   axes: ["opsz"],
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {

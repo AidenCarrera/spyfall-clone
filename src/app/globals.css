@@ -1,11 +1,59 @@
 @import "tailwindcss";
 
+/*
+  * Metric-adjusted system fallbacks to reduce layout shifts while display
+  * fonts load. Impact is preferred; Arial Bold covers systems without Impact.
+*/
+@font-face {
+  font-family: "Big Shoulders Fallback";
+  src: local("Impact");
+  font-weight: 100 900;
+  size-adjust: 93.8%;
+  ascent-override: 105.06%;
+  descent-override: 22.87%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Big Shoulders Fallback Arial";
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  font-weight: 100 900;
+  size-adjust: 68.5%;
+  ascent-override: 143.87%;
+  descent-override: 31.31%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Big Shoulders Stencil Fallback";
+  src: local("Impact");
+  font-weight: 100 900;
+  size-adjust: 97.1%;
+  ascent-override: 101.49%;
+  descent-override: 22.09%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Big Shoulders Stencil Fallback Arial";
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  font-weight: 100 900;
+  size-adjust: 70.9%;
+  ascent-override: 139%;
+  descent-override: 30.25%;
+  line-gap-override: 0%;
+}
+
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
-  --font-display: var(--font-big-shoulders), var(--font-geist-sans), sans-serif;
+  --font-display:
+    var(--font-big-shoulders), "Big Shoulders Fallback",
+    "Big Shoulders Fallback Arial", var(--font-geist-sans), sans-serif;
   --font-stencil:
-    var(--font-big-shoulders-stencil), var(--font-big-shoulders), sans-serif;
+    var(--font-big-shoulders-stencil), var(--font-big-shoulders),
+    "Big Shoulders Stencil Fallback", "Big Shoulders Stencil Fallback Arial",
+    sans-serif;
 
   --color-ink-950: #06070b;
   --color-ink-900: #0b0d14;
