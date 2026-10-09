@@ -3,4 +3,4 @@ allowBuilds:
   unrs-resolver: true
 
 overrides:
-  postcss: 8.5.19
+  postcss: 8.5.29
