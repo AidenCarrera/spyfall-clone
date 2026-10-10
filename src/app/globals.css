@@ -292,6 +292,18 @@
     linear-gradient(180deg, var(--color-ink-900), var(--color-ink-950));
 }
 
+/* Ignore the pointer until the last card has landed (0.31s delay + 0.9s deal-in),
+   so hovering mid-deal can't swap the pose the cards are animating towards. */
+.hero-deck {
+  animation: deal-hold 1.21s step-end;
+}
+
+@keyframes deal-hold {
+  from {
+    pointer-events: none;
+  }
+}
+
 /* Keep consistent transform function order across states for clean interpolation. */
 .hero-deck-card {
   position: absolute;
