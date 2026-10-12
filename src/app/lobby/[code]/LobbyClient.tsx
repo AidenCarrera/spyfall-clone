@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { AnimatePresence, motion } from "motion/react";
@@ -11,7 +11,7 @@ import {
   resetGameAction,
   togglePauseAction,
 } from "@/app/actions";
-import { fetchLobbyState } from "@/lib/lobby-state";
+import { fetchLobbyState, type LobbyStateResponse } from "@/lib/lobby-state";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { useConfirm } from "@/components/ConfirmDialog";
@@ -19,9 +19,13 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { LobbyView } from "@/components/lobby/LobbyView";
 import { GameView } from "@/components/game/GameView";
 import { useGameTimer } from "@/hooks/useGameTimer";
+import { useLobbyEvents } from "@/hooks/useLobbyEvents";
 import { MAX_SPIES, MIN_PLAYERS } from "@/lib/game-rules";
 
 const KICKED_ERROR = "Player not found in lobby";
+
+// With realtime nudges arriving, polling is only a safety net.
+const SAFETY_POLL_MS = 60_000;
 
 export function LobbyClient({ code }: { code: string }) {
   const router = useRouter();
@@ -31,6 +35,7 @@ export function LobbyClient({ code }: { code: string }) {
 
   const [isTabVisible, setIsTabVisible] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -42,6 +47,29 @@ export function LobbyClient({ code }: { code: string }) {
     };
   }, []);
 
+  // SWR restarts its poll timer whenever this function's identity changes, so
+  // it has to stay stable across the once-a-second countdown re-renders.
+  const refreshInterval = useCallback(
+    (latestData?: LobbyStateResponse) => {
+      const isKicked = latestData?.error === KICKED_ERROR;
+
+      if (!isTabVisible || isLeaving || isKicked) {
+        return 0;
+      }
+
+      if (isRealtimeConnected) {
+        return SAFETY_POLL_MS;
+      }
+
+      const lobbyStatus = latestData?.lobby?.status;
+      if (lobbyStatus === "IN_PROGRESS") {
+        return 2000;
+      }
+      return 4000;
+    },
+    [isTabVisible, isLeaving, isRealtimeConnected],
+  );
+
   const {
     data: lobbyData,
     error: lobbyError,
@@ -50,23 +78,18 @@ export function LobbyClient({ code }: { code: string }) {
     !isLeaving ? ["lobby", code] : null,
     ([, c]) => fetchLobbyState(c),
     {
-      refreshInterval: (latestData) => {
-        const isKicked = latestData?.error === KICKED_ERROR;
-
-        if (!isTabVisible || isLeaving || isKicked) {
-          return 0;
-        }
-
-        const lobbyStatus = latestData?.lobby?.status;
-        if (lobbyStatus === "IN_PROGRESS") {
-          return 2000;
-        }
-        return 4000;
-      },
+      refreshInterval,
       revalidateOnFocus: true,
       dedupingInterval: 2000,
     },
   );
+
+  useLobbyEvents({
+    code,
+    enabled: isTabVisible && !isLeaving && lobbyData?.error !== KICKED_ERROR,
+    onChange: mutate,
+    onConnectionChange: setIsRealtimeConnected,
+  });
 
   const lobby = lobbyData?.lobby;
   const error: string | undefined = lobbyError

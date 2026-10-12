@@ -13,6 +13,13 @@ export function normalizeLobbyCode(code: string): string {
   return code.trim().toUpperCase();
 }
 
+// Realtime channel and event used to tell a lobby's players to refetch.
+export const LOBBY_CHANGED_EVENT = "changed";
+
+export function lobbyChannelName(code: string): string {
+  return `lobby-${normalizeLobbyCode(code)}`;
+}
+
 export function generateLobbyCode(): string {
   let code = "";
   for (let i = 0; i < LOBBY_CODE_LENGTH; i++) {

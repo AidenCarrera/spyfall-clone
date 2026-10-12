@@ -1,4 +1,5 @@
 import { redis } from "./redis";
+import { notifyLobbyChanged } from "./realtime";
 import { DEFAULT_LOCATION_NAMES, findLocation } from "./locations";
 import { generateLobbyCode, normalizeLobbyCode } from "./lobby-code";
 import {
@@ -109,10 +110,9 @@ const isCurrentLobby = (lobby: Lobby): boolean =>
   );
 
 const getLobby = async (code: string): Promise<Lobby | undefined> => {
-  // Reading an active lobby refreshes its expiration window.
-  const lobby = await redis.getex<Lobby>(getLobbyKey(code), {
-    ex: LOBBY_TTL,
-  });
+  // A plain read, so polling never counts as a Redis write. The expiration
+  // window is renewed by every mutation instead.
+  const lobby = await redis.get<Lobby>(getLobbyKey(code));
   return lobby && isCurrentLobby(lobby) ? lobby : undefined;
 };
 
@@ -143,6 +143,7 @@ const updateLobby = async (
     );
 
     if (writeResult === 1) {
+      if (lobby.players.length > 0) notifyLobbyChanged(code, lobby.version);
       return { success: true, lobby };
     }
     if (writeResult === -1) return { success: false, reason: "not_found" };

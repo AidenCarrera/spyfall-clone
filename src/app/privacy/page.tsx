@@ -55,7 +55,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="mt-5 text-sm text-ink-400">
-            Last updated <time dateTime="2026-07-18">July 18, 2026</time>
+            Last updated <time dateTime="2026-10-11">October 11, 2026</time>
           </p>
         </header>
 
@@ -79,9 +79,10 @@ export default function PrivacyPage() {
 
           <PolicySection id="services" title="Service providers">
             Spyfall Online uses Vercel for website hosting and anonymous web
-            analytics, and Upstash for lobby storage and rate limiting. These
-            providers may process technical request information according to
-            their own privacy policies.
+            analytics, Upstash for lobby storage and rate limiting, and Pusher
+            for delivering live lobby updates. These providers may process
+            technical request information according to their own privacy
+            policies.
           </PolicySection>
 
           <PolicySection id="sharing" title="Data sharing">

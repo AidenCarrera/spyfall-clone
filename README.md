@@ -22,7 +22,7 @@ The goal of this project is to make playing Spyfall with friends quick and easy.
 
 - **Instant Lobbies:** Start a game and invite players with a 6-character room code or link.
 - **Spyfall 1 + 2 Support:** Includes both classic and expanded location sets for variety across games.
-- **Fast Sync (Redis-backed polling):** Game settings, timer, and roles stay synced across all devices.
+- **Fast Sync (Redis state + realtime push):** Game settings, timer, and roles stay synced across all devices, with polling as an automatic fallback.
 - **Easy Reconnects:** Rejoin active games automatically if you disconnect or close your tab.
 - **Host Controls:** Host can customize settings, adjust the timer, select locations, and assign roles.
 - **Mobile Friendly:** Tap-to-reveal cards to hide your role, and an interactive grid to cross off locations.
@@ -34,6 +34,7 @@ The goal of this project is to make playing Spyfall with friends quick and easy.
 - **Framework:** Next.js 16
 - **Frontend Library:** React 19
 - **Database / State Store:** Upstash Redis
+- **Realtime Updates:** Pusher Channels (optional)
 - **Styling:** Tailwind CSS v4
 - **Language:** TypeScript
 
@@ -46,6 +47,7 @@ The goal of this project is to make playing Spyfall with friends quick and easy.
 - **Node.js** (v24 recommended)
 - **pnpm**
 - **Upstash Redis** account
+- **Pusher Channels** app (optional, for instant updates)
 
 ### Setup
 
@@ -74,6 +76,15 @@ The goal of this project is to make playing Spyfall with friends quick and easy.
    ```env
    UPSTASH_REDIS_REST_URL="your-redis-url"
    UPSTASH_REDIS_REST_TOKEN="your-redis-token"
+   ```
+
+   Optionally add your Pusher Channels credentials so lobby updates are pushed to players instantly. Without them the lobby polls for updates instead:
+
+   ```env
+   PUSHER_APP_ID="your-app-id"
+   PUSHER_SECRET="your-secret"
+   NEXT_PUBLIC_PUSHER_KEY="your-key"
+   NEXT_PUBLIC_PUSHER_CLUSTER="your-cluster"
    ```
 
 4. **Run the app:**
